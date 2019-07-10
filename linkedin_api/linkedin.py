@@ -110,62 +110,6 @@ class Linkedin(object):
 
         return self.search(params, results=results, limit=limit)
 
-    def default_search(self, params, limit=None, results=[], start=0):
-        """
-        Default search
-        """
-        count = (
-            limit
-            if limit and limit <= Linkedin._MAX_SEARCH_COUNT
-            else Linkedin._MAX_SEARCH_COUNT
-        )
-
-        default_params = {
-            "count": '10',
-            "filters": "List()",
-            "origin": "GLOBAL_SEARCH_HEADER",
-            "q": "all",
-            "start": str(start),
-            "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
-        }
-
-        default_params.update(params)
-
-        res = self._fetch(
-            # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List(resultType-%3EPEOPLE)&keywords=python%20&origin=CLUSTER_EXPANSION&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
-            default_params['start'],
-            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
-        )
-
-        print(res)
-
-        data = res.json()
-
-        new_elements = []
-        for i in range(len(data["data"]["elements"])):
-            new_elements.extend(data["data"]["elements"][i]["elements"])
-            # not entirely sure what extendedElements generally refers to - keyword search gives back a single job?
-            # new_elements.extend(data["data"]["elements"][i]["extendedElements"])
-
-        results.extend(new_elements)
-        results = results[
-            :limit
-        ]  # always trim results, no matter what the request returns
-
-        # recursive base case
-        if (
-            limit is not None
-            and (
-                len(results) >= limit  # if our results exceed set limit
-                or len(results) / count >= Linkedin._MAX_REPEATED_REQUESTS
-            )
-        ) or len(new_elements) == 0:
-            return results
-
-        self.logger.debug(f"results grew to {len(results)}")
-
-        return self.search(params, results=results, limit=limit)
 
     def search_people(
         self,
@@ -181,11 +125,73 @@ class Linkedin(object):
         schools=None,
         include_private_profiles=False,  # profiles without a public id, "Linkedin Member"
         limit=None,
-        start=None
+        start=None,
+        key=None
     ):
+
         """
         Do a people search.
         """
+
+        def search_voyager(params, limit=None, results=[], start=0, key=None):
+            """
+            Default search
+            """
+            count = (
+                limit
+                if limit and limit <= Linkedin._MAX_SEARCH_COUNT
+                else Linkedin._MAX_SEARCH_COUNT
+            )
+
+            default_params = {
+                "count": '10',
+                "filters": "List()",
+                "origin": "GLOBAL_SEARCH_HEADER",
+                "q": "all",
+                "start": str(start),
+                "key": key,
+                "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
+            }
+
+            default_params.update(params)
+
+            res = self._fetch(
+                # f"/search/blended?{urlencode(default_params)}",
+                f"/search/blended?count=10&filters=List(resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=CLUSTER_EXPANSION&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
+                default_params['start'],
+                headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+            )
+
+            print(res)
+
+            data = res.json()
+
+            new_elements = []
+            for i in range(len(data["data"]["elements"])):
+                new_elements.extend(data["data"]["elements"][i]["elements"])
+                # not entirely sure what extendedElements generally refers to - keyword search gives back a single job?
+                # new_elements.extend(data["data"]["elements"][i]["extendedElements"])
+
+            results.extend(new_elements)
+            results = results[
+                :limit
+            ]  # always trim results, no matter what the request returns
+
+            # recursive base case
+            if (
+                limit is not None
+                and (
+                    len(results) >= limit  # if our results exceed set limit
+                    or len(results) / count >= Linkedin._MAX_REPEATED_REQUESTS
+                )
+            ) or len(new_elements) == 0:
+                return results
+
+            self.logger.debug(f"results grew to {len(results)}")
+
+            return self.search(params, results=results, limit=limit)
+
+     
         filters = ["resultType->PEOPLE"]
         if connection_of:
             filters.append(f"connectionOf->{connection_of}")
@@ -212,7 +218,7 @@ class Linkedin(object):
         if keywords:
             params["keywords"] = keywords
 
-        data = self.default_search(params, limit=limit, start=start)
+        data = search_voyager(params, limit=limit, start=start, key=keywords)
 
         results = []
         for item in data:
