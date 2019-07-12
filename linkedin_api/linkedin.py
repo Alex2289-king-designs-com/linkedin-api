@@ -58,6 +58,20 @@ class Linkedin(object):
         url = f"{self.client.API_BASE_URL}{uri}"
         return self.client.session.post(url, **kwargs)
 
+
+    def get_current_profile(self):
+        
+        response = self._fetch(
+            f'/me/', headers={"accept": "application/vnd.linkedin.normalized+json+2.1"})
+        data = response.json()
+        profile = {
+             'firstName' : data['included'][0]['firstName'],
+               'lastName': data['included'][0]['lastName'],
+               'publicIdentifier': data['included'][0]['publicIdentifier'],
+               'occupation': data['included'][0]['occupation'],
+         }
+        return profile
+
     def search(self, params, limit=None, results=[]):
         """
         Do a search.
@@ -110,7 +124,6 @@ class Linkedin(object):
 
         return self.search(params, results=results, limit=limit)
 
-
     def search_people(
         self,
         keywords=None,
@@ -128,7 +141,6 @@ class Linkedin(object):
         start=None,
         key=None
     ):
-
         """
         Do a people search.
         """
@@ -191,7 +203,6 @@ class Linkedin(object):
 
             return self.search(params, results=results, limit=limit)
 
-     
         filters = ["resultType->PEOPLE"]
         if connection_of:
             filters.append(f"connectionOf->{connection_of}")
