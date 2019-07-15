@@ -60,15 +60,16 @@ class Linkedin(object):
 
 
     def get_current_profile(self):
-        
+
         response = self._fetch(
             f'/me/', headers={"accept": "application/vnd.linkedin.normalized+json+2.1"})
         data = response.json()
         profile = {
-             'firstName' : data['included'][0]['firstName'],
-               'lastName': data['included'][0]['lastName'],
-               'publicIdentifier': data['included'][0]['publicIdentifier'],
-               'occupation': data['included'][0]['occupation'],
+              'firstName': data['included'][0]['firstName'],
+              'lastName': data['included'][0]['lastName'],
+              'publicIdentifier': data['included'][0]['publicIdentifier'],
+              'occupation': data['included'][0]['occupation'],
+              'message_id': data['included'][0]['entityUrn'].split(':')[3]
          }
         return profile
 
