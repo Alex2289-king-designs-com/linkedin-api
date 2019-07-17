@@ -319,12 +319,15 @@ class Linkedin(object):
             return {}
 
         # massage [profile] data
+        
         profile = data["profile"]
+        avatarUrl = data.get("profile").get('miniProfile').get('picture').get('com.linkedin.common.VectorImage').get('artifacts')[0].get('fileIdentifyingUrlPathSegment')
+
         if "miniProfile" in profile:
             if "picture" in profile["miniProfile"]:
                 profile["displayPictureUrl"] = profile["miniProfile"]["picture"][
                     "com.linkedin.common.VectorImage"
-                ]["rootUrl"]
+                ]["rootUrl"] + avatarUrl
             profile["profile_id"] = get_id_from_urn(
                 profile["miniProfile"]["entityUrn"])
 
