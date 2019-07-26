@@ -13,7 +13,6 @@ from linkedin_api.client import Client
 
 logger = logging.getLogger(__name__)
 
-
 industriesId = {
     "Accounting": 47,
     "Airlines/Aviation": 94,
@@ -165,6 +164,7 @@ industriesId = {
 }
 
 
+
 def default_evade():
     """
     A catch-all method to try and evade suspension from Linkedin.
@@ -227,7 +227,7 @@ class Linkedin(object):
          }
 
         try:
-            profile['avatarUrl'] = data['included'][0]['picture']['rootUrl'] + data['included'][0]['picture']['artifacts'][0]['fileIdentifyingUrlPathSegment']
+            profile['avatarUrl'] = data['included'][0]['picture']['rootUrl'] + data['included'][0]['picture']['artifacts'][2]['fileIdentifyingUrlPathSegment']
         except TypeError:
             profile['avatarUrl'] = None
 
@@ -319,7 +319,7 @@ class Linkedin(object):
             default_params = {
                 "count": '10',
                 "filters": "List()",
-                "origin": "GLOBAL_SEARCH_HEADER",
+                "origin": "CLUSTER_EXPANSION",
                 "q": "all",
                 "start": str(start),
                 "key": key,
@@ -331,18 +331,15 @@ class Linkedin(object):
 
             if industriesId.get(industry) == None:
                 default_params["industry"] = ""
-
-            print(default_params["industry"])
-
-            #import ipdb;ipdb.set_trace()
+            else:
+                default_params["origin"] = "FACETED_SEARCH"
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
-                f"/search/blended?count=10&filters=List(" + str(default_params['industry']) + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=CLUSTER_EXPANSION&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
+                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" + default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
-
 
             print(res)
 
