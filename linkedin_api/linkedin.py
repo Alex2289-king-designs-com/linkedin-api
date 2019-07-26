@@ -160,7 +160,16 @@ industriesId = {
     "Wholesale": 133,
     "Wine and Spirits": 142,
     "Wireless": 119,
-    "Writing and Editing": 103
+    "Writing and Editing": 103,
+}
+
+profile_languages_id = {
+    "Russian": "ru",
+    "English": "en",
+    "Others": "_o",
+    "French": "fr",
+    "German": "de", 
+    "Spanish": "es",
 }
 
 
@@ -306,7 +315,7 @@ class Linkedin(object):
         Do a people search.
         """
 
-        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries):
+        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries, profile_languages=profile_languages):
             """
             Default search
             """
@@ -324,19 +333,25 @@ class Linkedin(object):
                 "start": str(start),
                 "key": key,
                 "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
-                "industry": "industry->" + str(industriesId.get(industry)) + ','
+                "industry": "industry->" + str(industriesId.get(industry)) + ',',
+                "profile_languages": "profileLanguage->" + str(profile_languages_id.get(profile_languages)) + ','
             }
 
             default_params.update(params)
 
-            if industriesId.get(industry) == None:
+            if industriesId.get(industry) is None:
                 default_params["industry"] = ""
+            else:
+                default_params["origin"] = "FACETED_SEARCH"
+
+            if profile_languages_id.get(profile_languages) is None:\
+                default_params['profile_languages'] = ""
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
-                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" + default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
+                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['profile_languages'] + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" + default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
