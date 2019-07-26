@@ -172,7 +172,11 @@ profile_languages_id = {
     "Spanish": "es",
 }
 
-
+connenctions_depth_id = {
+    "1st": "F",
+    "2nd": "S",
+    "3rd+": "O"
+}
 
 def default_evade():
     """
@@ -315,7 +319,8 @@ class Linkedin(object):
         Do a people search.
         """
 
-        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries, profile_languages=profile_languages):
+        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries, profile_languages=profile_languages, 
+        network_depth=network_depth):
             """
             Default search
             """
@@ -334,7 +339,8 @@ class Linkedin(object):
                 "key": key,
                 "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
                 "industry": "industry->" + str(industriesId.get(industry)) + ',',
-                "profile_languages": "profileLanguage->" + str(profile_languages_id.get(profile_languages)) + ','
+                "profile_languages": "profileLanguage->" + str(profile_languages_id.get(profile_languages)) + ',',
+                "network_depth": "network->" + str(connenctions_depth_id.get(network_depth)) + ','
             }
 
             default_params.update(params)
@@ -344,14 +350,21 @@ class Linkedin(object):
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
-            if profile_languages_id.get(profile_languages) is None:\
+            if profile_languages_id.get(profile_languages) is None:
                 default_params['profile_languages'] = ""
+            else:
+                default_params["origin"] = "FACETED_SEARCH"
+
+            if connenctions_depth_id.get(network_depth) is None:
+                default_params['network_depth'] = ""
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
-                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['profile_languages'] + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" + default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + \
+                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] + default_params['profile_languages'] + 
+                 "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" + default_params["origin"] +
+                  "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + 
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
