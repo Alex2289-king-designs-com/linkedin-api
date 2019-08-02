@@ -160,7 +160,7 @@ industriesId = {
     "Wholesale": 133,
     "Wine and Spirits": 142,
     "Wireless": 119,
-    "Writing and Editing": 103,
+    "Writing and Editing": 103
 }
 
 profile_languages_id = {
@@ -302,11 +302,11 @@ class Linkedin(object):
         self,
         keywords=None,
         connection_of=None,
-        network_depth=None,
+        networkDepth=None,
         current_company=None,
         past_companies=None,
         nonprofit_interests=None,
-        profile_languages=None,
+        profileLanguages=None,
         regions=None,
         industries=None,
         schools=None,
@@ -319,8 +319,8 @@ class Linkedin(object):
         Do a people search.
         """
 
-        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries, profile_languages=profile_languages, 
-        network_depth=network_depth):
+        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries,  profileLanguages=profileLanguages,
+         networkDepth=networkDepth):
             """
             Default search
             """
@@ -339,8 +339,8 @@ class Linkedin(object):
                 "key": key,
                 "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
                 "industry": "industry->" + str(industriesId.get(industry)) + ',',
-                "profile_languages": "profileLanguage->" + str(profile_languages_id.get(profile_languages)) + ',',
-                "network_depth": "network->" + str(connenctions_depth_id.get(network_depth)) + ','
+                "profileLanguages": "profileLanguage->" + str(profile_languages_id.get(profileLanguages)) + ',',
+                "network_depth": "network->" + str(connenctions_depth_id.get(networkDepth)) + ','
             }
 
             default_params.update(params)
@@ -350,21 +350,21 @@ class Linkedin(object):
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
-            if profile_languages_id.get(profile_languages) is None:
-                default_params['profile_languages'] = ""
+            if profile_languages_id.get(profileLanguages) is None:
+                default_params['profileLanguages'] = ""
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
-            if connenctions_depth_id.get(network_depth) is None:
-                default_params['network_depth'] = ""
+            if connenctions_depth_id.get(networkDepth) is None:
+                    default_params['network_depth'] = ""
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
-                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] + default_params['profile_languages'] + 
-                 "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" + default_params["origin"] +
-                  "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + 
+                 f"/search/blended?count=10&filters=List(" + default_params['industry'] +  default_params['network_depth'] +
+                  default_params['profileLanguages'] + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" +
+                   default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + 
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
@@ -401,8 +401,8 @@ class Linkedin(object):
         filters = ["resultType->PEOPLE"]
         if connection_of:
             filters.append(f"connectionOf->{connection_of}")
-        if network_depth:
-            filters.append(f"network->{network_depth}")
+        #if network_depth:
+        #    filters.append(f"network->{network_depth}")
         if regions:
             filters.append(f'geoRegion->{"|".join(regions)}')
         if industries:
@@ -411,8 +411,8 @@ class Linkedin(object):
             filters.append(f'currentCompany->{"|".join(current_company)}')
         if past_companies:
             filters.append(f'pastCompany->{"|".join(past_companies)}')
-        if profile_languages:
-            filters.append(f'profileLanguage->{"|".join(profile_languages)}')
+       # if profileLanguages:
+        #    filters.append(f'profileLanguage->{"|".join(profile_languages)}')
         if nonprofit_interests:
             filters.append(
                 f'nonprofitInterest->{"|".join(nonprofit_interests)}')
