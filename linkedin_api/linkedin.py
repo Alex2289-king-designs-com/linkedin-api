@@ -303,25 +303,27 @@ class Linkedin(object):
         keywords=None,
         connection_of=None,
         networkDepth=None,
-        current_company=None,
+        currentCompany="",
         past_companies=None,
         nonprofit_interests=None,
         profileLanguages=None,
         regions=None,
         industries=None,
-        schools=None,
+        schools="",
         include_private_profiles=False,  # profiles without a public id, "Linkedin Member"
         limit=None,
         start=None,
         key=None,
-        title=""
+        title="",
+        firstName="",
+        lastName=""
     ):
         """
         Do a people search.
         """
 
         def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries,  profileLanguages=profileLanguages,
-         networkDepth=networkDepth, title=title):
+         networkDepth=networkDepth, title=title, firstName=firstName, lastName=lastName, currentCompany=currentCompany, schools=schools):
             """
             Default search
             """
@@ -364,13 +366,39 @@ class Linkedin(object):
             if title:
                 default_params['title'] = ",title->{}".format(title)
                 default_params["origin"] = "FACETED_SEARCH"
+            else:
+                default_params["title"] = ""
 
-            print(default_params["title"])
+            if firstName:
+                default_params['firstName'] = ",firstName->{}".format(firstName)
+                default_params["origin"] = "FACETED_SEARCH"
+            else:
+                default_params["firstName"] = ""
+
+            if lastName:
+                default_params['lastName'] = ",lastName->{}".format(lastName)
+                default_params["origin"] = "FACETED_SEARCH"
+            else:
+                default_params["lastName"] = ""
+
+            if currentCompany:
+                default_params['currentCompany'] = ",company->{}".format(currentCompany)
+                default_params["origin"] = "FACETED_SEARCH"
+            else:
+                default_params["currentCompany"] = ""
+
+            if schools:
+                default_params['schools'] = ",school->{}".format(schools)
+                default_params["origin"] = "FACETED_SEARCH"
+            else:
+                default_params["schools"] = ""
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
                  f"/search/blended?count=10&filters=List(" + default_params['industry'] +  default_params['network_depth'] +
-                  default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["title"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
+                  default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] + 
+                  default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
+                  default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
                    default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + 
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
@@ -414,8 +442,8 @@ class Linkedin(object):
             filters.append(f'geoRegion->{"|".join(regions)}')
         if industries:
             filters.append(f'industry->{"|".join(industries)}')
-        if current_company:
-            filters.append(f'currentCompany->{"|".join(current_company)}')
+        if currentCompany:
+            filters.append(f'currentCompany->{"|".join(currentCompany)}')
         if past_companies:
             filters.append(f'pastCompany->{"|".join(past_companies)}')
        # if profileLanguages:
