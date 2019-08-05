@@ -69,7 +69,8 @@ class Client(object):
                     if cookies:
                         return cookies
             except FileNotFoundError:
-                self.logger.debug("Cookie file not found. Requesting new cookies.")
+                self.logger.debug(
+                    "Cookie file not found. Requesting new cookies.")
 
         res = requests.get(
             f"{Client.AUTH_BASE_URL}/uas/authenticate",

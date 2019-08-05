@@ -313,14 +313,15 @@ class Linkedin(object):
         include_private_profiles=False,  # profiles without a public id, "Linkedin Member"
         limit=None,
         start=None,
-        key=None
+        key=None,
+        title=""
     ):
         """
         Do a people search.
         """
 
         def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries,  profileLanguages=profileLanguages,
-         networkDepth=networkDepth):
+         networkDepth=networkDepth, title=title):
             """
             Default search
             """
@@ -340,7 +341,7 @@ class Linkedin(object):
                 "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
                 "industry": "industry->" + str(industriesId.get(industry)) + ',',
                 "profileLanguages": "profileLanguage->" + str(profile_languages_id.get(profileLanguages)) + ',',
-                "network_depth": "network->" + str(connenctions_depth_id.get(networkDepth)) + ','
+                "network_depth": "network->" + str(connenctions_depth_id.get(networkDepth)) + ',',
             }
 
             default_params.update(params)
@@ -360,10 +361,16 @@ class Linkedin(object):
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
+            if title:
+                default_params['title'] = ",title->{}".format(title)
+                default_params["origin"] = "FACETED_SEARCH"
+
+            print(default_params["title"])
+
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
                  f"/search/blended?count=10&filters=List(" + default_params['industry'] +  default_params['network_depth'] +
-                  default_params['profileLanguages'] + "resultType-%3EPEOPLE)&keywords=" + default_params['key'] + "%20&origin=" +
+                  default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["title"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
                    default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + 
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
