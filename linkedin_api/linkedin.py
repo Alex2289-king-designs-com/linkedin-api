@@ -11,6 +11,7 @@ from linkedin_api.utils.helpers import get_id_from_urn
 
 from linkedin_api.client import Client
 
+
 logger = logging.getLogger(__name__)
 
 industriesId = {
@@ -168,7 +169,7 @@ profile_languages_id = {
     "English": "en",
     "Others": "_o",
     "French": "fr",
-    "German": "de", 
+    "German": "de",
     "Spanish": "es",
 }
 
@@ -177,6 +178,7 @@ connenctions_depth_id = {
     "2nd": "S",
     "3rd+": "O"
 }
+
 
 def default_evade():
     """
@@ -222,7 +224,6 @@ class Linkedin(object):
         url = f"{self.client.API_BASE_URL}{uri}"
         return self.client.session.post(url, **kwargs)
 
-
     def get_current_profile(self):
         """
         GET current profile
@@ -240,7 +241,8 @@ class Linkedin(object):
          }
 
         try:
-            profile['avatarUrl'] = data['included'][0]['picture']['rootUrl'] + data['included'][0]['picture']['artifacts'][2]['fileIdentifyingUrlPathSegment']
+            profile['avatarUrl'] = data['included'][0]['picture']['rootUrl'] + \
+                data['included'][0]['picture']['artifacts'][2]['fileIdentifyingUrlPathSegment']
         except TypeError:
             profile['avatarUrl'] = None
 
@@ -370,7 +372,8 @@ class Linkedin(object):
                 default_params["title"] = ""
 
             if firstName:
-                default_params['firstName'] = ",firstName->{}".format(firstName)
+                default_params['firstName'] = ",firstName->{}".format(
+                    firstName)
                 default_params["origin"] = "FACETED_SEARCH"
             else:
                 default_params["firstName"] = ""
@@ -382,7 +385,8 @@ class Linkedin(object):
                 default_params["lastName"] = ""
 
             if currentCompany:
-                default_params['currentCompany'] = ",company->{}".format(currentCompany)
+                default_params['currentCompany'] = ",company->{}".format(
+                    currentCompany)
                 default_params["origin"] = "FACETED_SEARCH"
             else:
                 default_params["currentCompany"] = ""
@@ -395,11 +399,11 @@ class Linkedin(object):
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
-                 f"/search/blended?count=10&filters=List(" + default_params['industry'] +  default_params['network_depth'] +
-                  default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] + 
+                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] +
+                  default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
                   default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
                   default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
-                   default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" + 
+                   default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
@@ -436,7 +440,7 @@ class Linkedin(object):
         filters = ["resultType->PEOPLE"]
         if connection_of:
             filters.append(f"connectionOf->{connection_of}")
-        #if network_depth:
+        # if network_depth:
         #    filters.append(f"network->{network_depth}")
         if regions:
             filters.append(f'geoRegion->{"|".join(regions)}')
@@ -548,9 +552,10 @@ class Linkedin(object):
             return {}
 
         # massage [profile] data
-        
+
         profile = data["profile"]
-        avatarUrl = data.get("profile").get('miniProfile').get('picture').get('com.linkedin.common.VectorImage').get('artifacts')[0].get('fileIdentifyingUrlPathSegment')
+        avatarUrl = data.get("profile").get('miniProfile').get('picture').get(
+            'com.linkedin.common.VectorImage').get('artifacts')[0].get('fileIdentifyingUrlPathSegment')
 
         if "miniProfile" in profile:
             if "picture" in profile["miniProfile"]:
@@ -902,25 +907,30 @@ class Linkedin(object):
 
         return res.status_code == 200
 
-    # def add_connection(self, profile_urn_id):
-    #     payload = {
-    #         "emberEntityName": "growth/invitation/norm-invitation",
-    #         "invitee": {
-    #             "com.linkedin.voyager.growth.invitation.InviteeProfile": {
-    #                 "profileId": profile_urn_id
-    #             }
-    #         },
-    #     }
+    def add_connection(self, profile_urn_id):
+        for data in self.client.:
+            print(data)
 
-    #     print(payload)
+        payload = {
+            "emberEntityName": "growth/invitation/norm-invitation",
+             "invitee": {
+                 "com.linkedin.voyager.growth.invitation.InviteeProfile": {
+                     "profileId": profile_urn_id
+                 }
+             },
+         }
 
-    #     res = self._post(
-    #         "/growth/normInvitations",
-    #         data=payload,
-    #         headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
-    #     )
+        print(payload)
 
-    #     return res.status_code != 201
+        res = self._post(
+             "/growth/normInvitations",
+             data=payload,
+             headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+        )
+
+        import ipdb; ipdb.set_trace()
+
+        return res.status_code != 201
 
     def remove_connection(self, public_profile_id):
         res = self._post(
@@ -929,3 +939,5 @@ class Linkedin(object):
         )
 
         return res.status_code != 200
+
+    
