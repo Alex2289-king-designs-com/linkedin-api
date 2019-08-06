@@ -554,8 +554,12 @@ class Linkedin(object):
         # massage [profile] data
 
         profile = data["profile"]
-        avatarUrl = data.get("profile").get('miniProfile').get('picture').get(
-            'com.linkedin.common.VectorImage').get('artifacts')[0].get('fileIdentifyingUrlPathSegment')
+
+        try: 
+            avatarUrl = data.get("profile").get('miniProfile').get('picture').get(
+                'com.linkedin.common.VectorImage').get('artifacts')[0].get('fileIdentifyingUrlPathSegment')
+        except AttributeError:
+            avatarUrl = ""
 
         if "miniProfile" in profile:
             if "picture" in profile["miniProfile"]:
