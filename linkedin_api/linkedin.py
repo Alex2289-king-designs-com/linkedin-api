@@ -907,15 +907,19 @@ class Linkedin(object):
 
         return res.status_code == 200
 
-    def add_connection(self, profile_urn_id):
-        data = '{"trackingId":"yvzykVorToqcOuvtxjSFMg==","invitations":[],"excludeInvitations":[],"invitee":{"com.linkedin.voyager.growth.invitation.InviteeProfile":{"profileId":' + '"' + profile_urn_id + '"' + '}}}'
+    def add_connection(self, profile_urn_id, message=None):
+        data = '{"trackingId":"yvzykVorToqcOuvtxjSFMg==","invitations":[],"excludeInvitations":[],"invitee":{"com.linkedin.voyager.growth.invitation.InviteeProfile":{"profileId":' + \
+            '"' + profile_urn_id + '"' + '}}}'
+        if message:
+            data = '{"trackingId":"yvzykVorToqcOuvtxjSFMg==","invitations":[],"excludeInvitations":[],"invitee":{"com.linkedin.voyager.growth.invitation.InviteeProfile":{"profileId":' + \
+                '"' + profile_urn_id + '"' + '}},"message":' '"' + message + '"' + '}'
 
         res = self._post(
             '/growth/normInvitations',
             data=data,
             headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
-        return res.status_code != 201
+        return res.status_code
 
     def remove_connection(self, public_profile_id):
         res = self._post(
