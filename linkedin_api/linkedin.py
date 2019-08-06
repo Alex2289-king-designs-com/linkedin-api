@@ -233,12 +233,12 @@ class Linkedin(object):
         data = response.json()
 
         profile = {
-              'firstName': data['included'][0]['firstName'],
-              'lastName': data['included'][0]['lastName'],
-              'publicIdentifier': data['included'][0]['publicIdentifier'],
-              'occupation': data['included'][0]['occupation'],
-              'message_id': data['included'][0]['entityUrn'].split(':')[3],
-         }
+            'firstName': data['included'][0]['firstName'],
+            'lastName': data['included'][0]['lastName'],
+            'publicIdentifier': data['included'][0]['publicIdentifier'],
+            'occupation': data['included'][0]['occupation'],
+            'message_id': data['included'][0]['entityUrn'].split(':')[3],
+        }
 
         try:
             profile['avatarUrl'] = data['included'][0]['picture']['rootUrl'] + \
@@ -325,7 +325,7 @@ class Linkedin(object):
         """
 
         def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries,  profileLanguages=profileLanguages,
-         networkDepth=networkDepth, title=title, firstName=firstName, lastName=lastName, currentCompany=currentCompany, schools=schools):
+                           networkDepth=networkDepth, title=title, firstName=firstName, lastName=lastName, currentCompany=currentCompany, schools=schools):
             """
             Default search
             """
@@ -361,7 +361,7 @@ class Linkedin(object):
                 default_params["origin"] = "FACETED_SEARCH"
 
             if connenctions_depth_id.get(networkDepth) is None:
-                    default_params['network_depth'] = ""
+                default_params['network_depth'] = ""
             else:
                 default_params["origin"] = "FACETED_SEARCH"
 
@@ -399,11 +399,11 @@ class Linkedin(object):
 
             res = self._fetch(
                 # f"/search/blended?{urlencode(default_params)}",
-                 f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] +
-                  default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
-                  default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
-                  default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
-                   default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
+                f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] +
+                default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
+                default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
+                default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
+                default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
@@ -908,28 +908,13 @@ class Linkedin(object):
         return res.status_code == 200
 
     def add_connection(self, profile_urn_id):
-        for data in self.client.:
-            print(data)
-
-        payload = {
-            "emberEntityName": "growth/invitation/norm-invitation",
-             "invitee": {
-                 "com.linkedin.voyager.growth.invitation.InviteeProfile": {
-                     "profileId": profile_urn_id
-                 }
-             },
-         }
-
-        print(payload)
+        data = '{"trackingId":"yvzykVorToqcOuvtxjSFMg==","invitations":[],"excludeInvitations":[],"invitee":{"com.linkedin.voyager.growth.invitation.InviteeProfile":{"profileId":' + '"' + profile_urn_id + '"' + '}}}'
 
         res = self._post(
-             "/growth/normInvitations",
-             data=payload,
-             headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+            '/growth/normInvitations',
+            data=data,
+            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
-
-        import ipdb; ipdb.set_trace()
-
         return res.status_code != 201
 
     def remove_connection(self, public_profile_id):
@@ -939,5 +924,3 @@ class Linkedin(object):
         )
 
         return res.status_code != 200
-
-    
