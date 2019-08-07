@@ -1,11 +1,12 @@
 """
 Provides linkedin api-related code
 """
-import random
+import random 
 import logging
 from time import sleep
 from urllib.parse import urlencode
 import json
+import re
 
 from linkedin_api.utils.helpers import get_id_from_urn
 
@@ -467,6 +468,35 @@ class Linkedin(object):
         for item in data:
             if "publicIdentifier" not in item:
                 continue
+
+            if item.get("headline").get("text"):
+                headline = item.get("headline").get("text")
+                size = len(headline.split("--"))
+                if size == 2:
+                    headline = headline.split("--")
+                    position = headline[0]
+                    company = headline[1]
+                else:
+                    size = len(headline.split(" at "))
+                    if size == 2:
+                        headline = headline.split(" at ")
+                        position = headline[0]
+                        company = headline[1]
+                    else:
+                        size = len(headline.split("|"))
+                        if size == 2:
+                            headline = headline.split("|")
+                            position = headline[0]
+                            company = headline[1]
+                        else:
+                            size = len(headline.split("-"))
+                            if size == 2:
+                                headline = headline.split("-")
+                                position = headline[0]
+                                company = headline[1]
+                            else:
+                                position = headline
+                                company = ""
     
             results.append(
                 {
@@ -474,8 +504,9 @@ class Linkedin(object):
                     "public_id": item.get("publicIdentifier"),
                     "first_name": item.get("title").get("text").split()[0],
                     "last_name": item.get("title").get("text").split()[1],
-                    "position": item.get("headline").get("text"),
-                    "location": item.get("subline").get("text")
+                    "position": position,
+                    "location": item.get("subline").get("text"),
+                    "company": company
                 }
             )
 
