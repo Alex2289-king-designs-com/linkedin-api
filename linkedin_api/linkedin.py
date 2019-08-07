@@ -408,10 +408,7 @@ class Linkedin(object):
                 default_params['start'],
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
-
             data = res.json()
-
-            
 
             new_elements = []
             for i in range(len(data["data"]["elements"])):
@@ -436,7 +433,7 @@ class Linkedin(object):
 
             self.logger.debug(f"results grew to {len(results)}")
 
-            return self.search(params, results=results, limit=limit)
+            return data
 
         filters = ["resultType->PEOPLE"]
         if connection_of:
@@ -466,49 +463,58 @@ class Linkedin(object):
 
         data = search_voyager(params, limit=limit, start=start, key=keywords)
 
+        fullData = data.get("data").get("elements")
+
+        data = data.get("included")[10:]
+
         results = []
         for item in data:
             if "publicIdentifier" not in item:
                 continue
 
-            if item.get("headline").get("text"):
-                headline = item.get("headline").get("text")
-                size = len(headline.split("\u2013"))
+            if item.get("occupation"):
+                occupation = item.get("occupation")
+                size = len(occupation.split("\u2013"))
                 if size == 2:
-                    headline = headline.split("\u2013")
-                    position = headline[0]
-                    company = headline[1]
+                    occupation = occupation.split("\u2013")
+                    position = occupation[0]
+                    company = occupation[1]
                 else:
-                    size = len(headline.split(" at "))
+                    size = len(occupation.split(" at "))
                     if size == 2:
-                        headline = headline.split(" at ")
-                        position = headline[0]
-                        company = headline[1]
+                        occupation = occupation.split(" at ")
+                        position = occupation[0]
+                        company = occupation[1]
                     else:
-                        size = len(headline.split("|"))
+                        size = len(occupation.split("|"))
                         if size == 2:
-                            headline = headline.split("|")
-                            position = headline[0]
-                            company = headline[1]
+                            occupation = occupation.split("|")
+                            position = occupation[0]
+                            company = occupation[1]
                         else:
-                            size = len(headline.split("-"))
+                            size = len(occupation.split("-"))
                             if size == 2:
-                                headline = headline.split("-")
-                                position = headline[0]
-                                company = headline[1]
+                                occupation = occupation.split("-")
+                                position = occupation[0]
+                                company = occupation[1]
                             else:
-                                position = headline
+                                position = occupation
                                 company = ""
+            
+            try:
+                displayPictureUrl = item.get("picture").get("rootUrl") + item.get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
+            except AttributeError:
+                displayPictureUrl = ""
     
             results.append(
                 {
-                    "urn_id": get_id_from_urn(item.get("targetUrn")),
+                    "urn_id": item.get("entityUrn").split(":")[3],
                     "public_id": item.get("publicIdentifier"),
-                    "first_name": item.get("title").get("text").split()[0],
-                    "last_name": item.get("title").get("text").split()[1],
+                    "first_name": item.get("firstName"),
+                    "last_name": item.get("lastName"),
                     "position": position,
-                    "location": item.get("subline").get("text"),
-                    "company": company
+                    "company": company,
+                    "displayPictureUrl": displayPictureUrl
                 }
             )
 
