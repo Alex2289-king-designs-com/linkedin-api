@@ -408,8 +408,6 @@ class Linkedin(object):
                 headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
             )
 
-            print(res)
-
             data = res.json()
 
             new_elements = []
@@ -469,11 +467,14 @@ class Linkedin(object):
         for item in data:
             if "publicIdentifier" not in item:
                 continue
+    
             results.append(
                 {
                     "urn_id": get_id_from_urn(item.get("targetUrn")),
-                    "distance": item.get("memberDistance", {}).get("value"),
                     "public_id": item.get("publicIdentifier"),
+                    "first_name": item.get("title").get("text").split()[0],
+                    "last_name": item.get("title").get("text").split()[1],
+                    "position": item.get("headline").get("text")
                 }
             )
 
