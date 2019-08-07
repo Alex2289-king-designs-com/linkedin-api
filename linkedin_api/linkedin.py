@@ -474,7 +474,8 @@ class Linkedin(object):
                     "public_id": item.get("publicIdentifier"),
                     "first_name": item.get("title").get("text").split()[0],
                     "last_name": item.get("title").get("text").split()[1],
-                    "position": item.get("headline").get("text")
+                    "position": item.get("headline").get("text"),
+                    "location": item.get("subline").get("text")
                 }
             )
 
