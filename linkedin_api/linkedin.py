@@ -465,6 +465,8 @@ class Linkedin(object):
 
         fullData = data.get("data").get("elements")
 
+        print(json.dumps(fullData, indent=4))
+
         data = data.get("included")[10:]
 
         results = []
@@ -517,6 +519,18 @@ class Linkedin(object):
                     "displayPictureUrl": displayPictureUrl
                 }
             )
+            
+            results = results[:10]
+            pos = 0 
+            for element  in fullData[0].get("elements"):
+                results[pos]['location'] = element.get("subline").get("text")
+                pos += 1
+
+                if pos > (len(results) - 1):
+                    break
+
+
+                    
 
         return results
 
