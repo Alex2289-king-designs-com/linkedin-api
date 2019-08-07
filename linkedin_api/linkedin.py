@@ -411,6 +411,8 @@ class Linkedin(object):
 
             data = res.json()
 
+            
+
             new_elements = []
             for i in range(len(data["data"]["elements"])):
                 new_elements.extend(data["data"]["elements"][i]["elements"])
@@ -471,9 +473,9 @@ class Linkedin(object):
 
             if item.get("headline").get("text"):
                 headline = item.get("headline").get("text")
-                size = len(headline.split("--"))
+                size = len(headline.split("\u2013"))
                 if size == 2:
-                    headline = headline.split("--")
+                    headline = headline.split("\u2013")
                     position = headline[0]
                     company = headline[1]
                 else:
