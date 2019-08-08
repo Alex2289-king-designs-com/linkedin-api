@@ -300,6 +300,114 @@ class Linkedin(object):
 
         return self.search(params, results=results, limit=limit)
 
+    def search_voyager(self, limit=None, results=[], start=0, key=None, industry=None,  profileLanguages=None,
+                       networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools=""):
+        """
+        Default search
+        """
+        count = (
+            limit
+            if limit and limit <= Linkedin._MAX_SEARCH_COUNT
+            else Linkedin._MAX_SEARCH_COUNT
+        )
+
+        default_params = {
+            "count": '10',
+            "filters": "List()",
+            "origin": "CLUSTER_EXPANSION",
+            "q": "all",
+            "start": str(start),
+            "key": key,
+            "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
+            "industry": "industry->" + str(industriesId.get(industry)) + ',',
+            "profileLanguages": "profileLanguage->" + str(profile_languages_id.get(profileLanguages)) + ',',
+            "network_depth": "network->" + str(connenctions_depth_id.get(networkDepth)) + ',',
+        }
+
+        if industriesId.get(industry) is None:
+            default_params["industry"] = ""
+        else:
+            default_params["origin"] = "FACETED_SEARCH"
+
+        if profile_languages_id.get(profileLanguages) is None:
+            default_params['profileLanguages'] = ""
+        else:
+            default_params["origin"] = "FACETED_SEARCH"
+
+        if connenctions_depth_id.get(networkDepth) is None:
+            default_params['network_depth'] = ""
+        else:
+            default_params["origin"] = "FACETED_SEARCH"
+
+        if title:
+            default_params['title'] = ",title->{}".format(title)
+            default_params["origin"] = "FACETED_SEARCH"
+        else:
+            default_params["title"] = ""
+
+        if firstName:
+            default_params['firstName'] = ",firstName->{}".format(
+                firstName)
+            default_params["origin"] = "FACETED_SEARCH"
+        else:
+            default_params["firstName"] = ""
+
+        if lastName:
+            default_params['lastName'] = ",lastName->{}".format(lastName)
+            default_params["origin"] = "FACETED_SEARCH"
+        else:
+            default_params["lastName"] = ""
+
+        if currentCompany:
+            default_params['currentCompany'] = ",company->{}".format(
+                currentCompany)
+            default_params["origin"] = "FACETED_SEARCH"
+        else:
+            default_params["currentCompany"] = ""
+
+        if schools:
+            default_params['schools'] = ",school->{}".format(schools)
+            default_params["origin"] = "FACETED_SEARCH"
+        else:
+            default_params["schools"] = ""
+
+        res = self._fetch(
+            # f"/search/blended?{urlencode(default_params)}",
+            f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] +
+            default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
+            default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
+            default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
+            default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
+            default_params['start'],
+            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+        )
+        data = res.json()
+
+        new_elements = []
+        for i in range(len(data["data"]["elements"])):
+            new_elements.extend(data["data"]["elements"][i]["elements"])
+        # not entirely sure what extendedElements generally refers to - keyword search gives back a single job?
+        # new_elements.extend(data["data"]["elements"][i]["extendedElements"])
+
+        results.extend(new_elements)
+        results = results[
+            :limit
+        ]  # always trim results, no matter what the request returns
+
+        # recursive base case
+        if (
+            limit is not None
+            and (
+                len(results) >= limit  # if our results exceed set limit
+                or len(results) / count >= Linkedin._MAX_REPEATED_REQUESTS
+            )
+        ) or len(new_elements) == 0:
+            return results
+
+        self.logger.debug(f"results grew to {len(results)}")
+
+        return data
+
     def search_people(
         self,
         keywords=None,
@@ -324,143 +432,10 @@ class Linkedin(object):
         Do a people search.
         """
 
-        def search_voyager(params, limit=None, results=[], start=0, key=None, industry=industries,  profileLanguages=profileLanguages,
-                           networkDepth=networkDepth, title=title, firstName=firstName, lastName=lastName, currentCompany=currentCompany, schools=schools):
-            """
-            Default search
-            """
-            count = (
-                limit
-                if limit and limit <= Linkedin._MAX_SEARCH_COUNT
-                else Linkedin._MAX_SEARCH_COUNT
-            )
-
-            default_params = {
-                "count": '10',
-                "filters": "List()",
-                "origin": "CLUSTER_EXPANSION",
-                "q": "all",
-                "start": str(start),
-                "key": key,
-                "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
-                "industry": "industry->" + str(industriesId.get(industry)) + ',',
-                "profileLanguages": "profileLanguage->" + str(profile_languages_id.get(profileLanguages)) + ',',
-                "network_depth": "network->" + str(connenctions_depth_id.get(networkDepth)) + ',',
-            }
-
-            default_params.update(params)
-
-            if industriesId.get(industry) is None:
-                default_params["industry"] = ""
-            else:
-                default_params["origin"] = "FACETED_SEARCH"
-
-            if profile_languages_id.get(profileLanguages) is None:
-                default_params['profileLanguages'] = ""
-            else:
-                default_params["origin"] = "FACETED_SEARCH"
-
-            if connenctions_depth_id.get(networkDepth) is None:
-                default_params['network_depth'] = ""
-            else:
-                default_params["origin"] = "FACETED_SEARCH"
-
-            if title:
-                default_params['title'] = ",title->{}".format(title)
-                default_params["origin"] = "FACETED_SEARCH"
-            else:
-                default_params["title"] = ""
-
-            if firstName:
-                default_params['firstName'] = ",firstName->{}".format(
-                    firstName)
-                default_params["origin"] = "FACETED_SEARCH"
-            else:
-                default_params["firstName"] = ""
-
-            if lastName:
-                default_params['lastName'] = ",lastName->{}".format(lastName)
-                default_params["origin"] = "FACETED_SEARCH"
-            else:
-                default_params["lastName"] = ""
-
-            if currentCompany:
-                default_params['currentCompany'] = ",company->{}".format(
-                    currentCompany)
-                default_params["origin"] = "FACETED_SEARCH"
-            else:
-                default_params["currentCompany"] = ""
-
-            if schools:
-                default_params['schools'] = ",school->{}".format(schools)
-                default_params["origin"] = "FACETED_SEARCH"
-            else:
-                default_params["schools"] = ""
-
-            res = self._fetch(
-                # f"/search/blended?{urlencode(default_params)}",
-                f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] +
-                default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
-                default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
-                default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
-                default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
-                default_params['start'],
-                headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
-            )
-            data = res.json()
-
-            new_elements = []
-            for i in range(len(data["data"]["elements"])):
-                new_elements.extend(data["data"]["elements"][i]["elements"])
-                # not entirely sure what extendedElements generally refers to - keyword search gives back a single job?
-                # new_elements.extend(data["data"]["elements"][i]["extendedElements"])
-
-            results.extend(new_elements)
-            results = results[
-                :limit
-            ]  # always trim results, no matter what the request returns
-
-            # recursive base case
-            if (
-                limit is not None
-                and (
-                    len(results) >= limit  # if our results exceed set limit
-                    or len(results) / count >= Linkedin._MAX_REPEATED_REQUESTS
-                )
-            ) or len(new_elements) == 0:
-                return results
-
-            self.logger.debug(f"results grew to {len(results)}")
-
-            return data
-
-        filters = ["resultType->PEOPLE"]
-        if connection_of:
-            filters.append(f"connectionOf->{connection_of}")
-        # if network_depth:
-        #    filters.append(f"network->{network_depth}")
-        if regions:
-            filters.append(f'geoRegion->{"|".join(regions)}')
-        if industries:
-            filters.append(f'industry->{"|".join(industries)}')
-        if currentCompany:
-            filters.append(f'currentCompany->{"|".join(currentCompany)}')
-        if past_companies:
-            filters.append(f'pastCompany->{"|".join(past_companies)}')
-       # if profileLanguages:
-        #    filters.append(f'profileLanguage->{"|".join(profile_languages)}')
-        if nonprofit_interests:
-            filters.append(
-                f'nonprofitInterest->{"|".join(nonprofit_interests)}')
-        if schools:
-            filters.append(f'schools->{"|".join(schools)}')
-
-        params = {"filters": "List({})".format(",".join(filters))}
-
-        if keywords:
-            params["keywords"] = keywords
-
-        data = search_voyager(params, limit=limit, start=start, key=keywords)
+        data = self.search_voyager(limit=limit, results=[], start=start,
+                                   key=keywords, industry=industries,  profileLanguages=profileLanguages,
+                                   networkDepth=networkDepth, title=title, firstName=firstName,
+                                   lastName=lastName, currentCompany=currentCompany, schools=schools)
 
         fullData = data.get("data").get("elements")
 
