@@ -7,7 +7,7 @@ from time import sleep
 from urllib.parse import urlencode
 import json
 import re
-from .constance import (
+from .constants import (
     INDUSTRIES_ID,
     PROFILE_LANGUAGES_ID,
     CONNECTIONS_DEPTH_ID

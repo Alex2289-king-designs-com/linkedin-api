@@ -21,7 +21,7 @@ INDUSTRIES_ID = {
     "Commercial Real Estate": 128,
     "Computer & Network Security": 118,
     "Computer Games": 109,
-    "Computer Hardware": 3,
+    "Computer Hardware": 3, 
     "Computer Networking": 5,
     "Computer Software": 4,
     "Construction": 48,
