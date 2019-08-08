@@ -12,7 +12,6 @@ from linkedin_api.utils.helpers import get_id_from_urn
 
 from linkedin_api.client import Client
 
-
 logger = logging.getLogger(__name__)
 
 industriesId = {
@@ -186,7 +185,7 @@ def default_evade():
     A catch-all method to try and evade suspension from Linkedin.
     Currenly, just delays the request by a random (bounded) time
     """
-    sleep(random.randint(2, 5))  # sleep a random duration to try and evade suspention
+    sleep(random.uniform(0.25, 1))  # sleep a random duration to try and evade suspention
 
 
 class Linkedin(object):
@@ -465,8 +464,6 @@ class Linkedin(object):
 
         fullData = data.get("data").get("elements")
 
-        print(json.dumps(fullData, indent=4))
-
         data = data.get("included")[10:]
 
         results = []
@@ -524,13 +521,11 @@ class Linkedin(object):
             pos = 0 
             for element  in fullData[0].get("elements"):
                 results[pos]['location'] = element.get("subline").get("text")
+                results[pos]['navigation_url'] = "https://www.linkedin.com/in/" + results[pos].get("public_id")
                 pos += 1
 
                 if pos > (len(results) - 1):
                     break
-
-
-                    
 
         return results
 
