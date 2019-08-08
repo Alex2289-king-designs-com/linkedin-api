@@ -1,7 +1,7 @@
 """
 Provides linkedin api-related code
 """
-import random 
+import random
 import logging
 from time import sleep
 from urllib.parse import urlencode
@@ -185,7 +185,7 @@ def default_evade():
     A catch-all method to try and evade suspension from Linkedin.
     Currenly, just delays the request by a random (bounded) time
     """
-    sleep(random.uniform(0.25, 1))  # sleep a random duration to try and evade suspention
+    sleep(random.uniform(0, 0))  # sleep a random duration to try and evade suspention
 
 
 class Linkedin(object):
@@ -499,12 +499,13 @@ class Linkedin(object):
                             else:
                                 position = occupation
                                 company = ""
-            
+
             try:
-                displayPictureUrl = item.get("picture").get("rootUrl") + item.get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
+                displayPictureUrl = item.get("picture").get(
+                    "rootUrl") + item.get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
             except AttributeError:
                 displayPictureUrl = ""
-    
+
             results.append(
                 {
                     "urn_id": item.get("entityUrn").split(":")[3],
@@ -516,12 +517,13 @@ class Linkedin(object):
                     "displayPictureUrl": displayPictureUrl
                 }
             )
-            
+
             results = results[:10]
-            pos = 0 
-            for element  in fullData[0].get("elements"):
+            pos = 0
+            for element in fullData[0].get("elements"):
                 results[pos]['location'] = element.get("subline").get("text")
-                results[pos]['navigation_url'] = "https://www.linkedin.com/in/" + results[pos].get("public_id")
+                results[pos]['navigation_url'] = "https://www.linkedin.com/in/" + \
+                    results[pos].get("public_id")
                 pos += 1
 
                 if pos > (len(results) - 1):
@@ -605,7 +607,7 @@ class Linkedin(object):
 
         profile = data["profile"]
 
-        try: 
+        try:
             avatarUrl = data.get("profile").get('miniProfile').get('picture').get(
                 'com.linkedin.common.VectorImage').get('artifacts')[0].get('fileIdentifyingUrlPathSegment')
         except AttributeError:
