@@ -21,7 +21,7 @@ INDUSTRIES_ID = {
     "Commercial Real Estate": 128,
     "Computer & Network Security": 118,
     "Computer Games": 109,
-    "Computer Hardware": 3, 
+    "Computer Hardware": 3,
     "Computer Networking": 5,
     "Computer Software": 4,
     "Construction": 48,
@@ -161,4 +161,9 @@ CONNECTIONS_DEPTH_ID = {
     "1st": "F",
     "2nd": "S",
     "3rd+": "O"
+}
+
+GEOGRAPHY_CODES = {
+    "Russian": "ru",
+    "Ukraine": "ua"
 }

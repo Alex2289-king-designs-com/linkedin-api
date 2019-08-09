@@ -10,7 +10,8 @@ import re
 from .constants import (
     INDUSTRIES_ID,
     PROFILE_LANGUAGES_ID,
-    CONNECTIONS_DEPTH_ID
+    CONNECTIONS_DEPTH_ID,
+    GEOGRAPHY_CODES
 )
 
 from linkedin_api.utils.helpers import get_id_from_urn
@@ -141,7 +142,7 @@ class Linkedin(object):
         return self.search(params, results=results, limit=limit)
 
     def search_voyager(self, limit=None, results=[], start=0, key=None, industry=None,  profileLanguages=None,
-                       networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools=""):
+                       networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools="", regions=None):
         """
         Default search
         """
@@ -154,7 +155,7 @@ class Linkedin(object):
         default_params = {
             "count": '10',
             "filters": "List()",
-            "origin": "FACETED_SEARCH",
+            "origin": "CLUSTER_EXPANSION",
             "q": "all",
             "start": str(start),
             "key": key,
@@ -163,6 +164,18 @@ class Linkedin(object):
             "profileLanguages": "profileLanguage->" + str(PROFILE_LANGUAGES_ID.get(profileLanguages)) + ',',
             "network_depth": "network->" + str(CONNECTIONS_DEPTH_ID.get(networkDepth)) + ',',
         }
+
+
+        if regions is None:
+            default_params["regions"] = ""
+        else:
+            regions_codes = []
+            for region in regions:
+                region = GEOGRAPHY_CODES.get(region, "")
+                regions_codes.append(region)
+
+            default_params["origin"] = "FACETED_SEARCH"
+            default_params["regions"] = "geoRegion->{}%3A0,".format("|".join(regions_codes))
 
         if INDUSTRIES_ID.get(industry) is None:
             default_params["industry"] = ""
@@ -188,54 +201,55 @@ class Linkedin(object):
         if firstName:
             default_params['firstName'] = ",firstName->{}".format(
                 firstName)
-            default_params["origin"] = "FACETED_SEARCH"
+            default_params["origin"]="FACETED_SEARCH"
         else:
-            default_params["firstName"] = ""
+            default_params["firstName"]=""
 
         if lastName:
-            default_params['lastName'] = ",lastName->{}".format(lastName)
-            default_params["origin"] = "FACETED_SEARCH"
+            default_params['lastName']=",lastName->{}".format(lastName)
+            default_params["origin"]="FACETED_SEARCH"
         else:
-            default_params["lastName"] = ""
+            default_params["lastName"]=""
 
         if currentCompany:
-            default_params['currentCompany'] = ",company->{}".format(
+            default_params['currentCompany']=",company->{}".format(
                 currentCompany)
-            default_params["origin"] = "FACETED_SEARCH"
+            default_params["origin"]="FACETED_SEARCH"
         else:
-            default_params["currentCompany"] = ""
+            default_params["currentCompany"]=""
 
         if schools:
-            default_params['schools'] = ",school->{}".format(schools)
-            default_params["origin"] = "FACETED_SEARCH"
+            default_params['schools']=",school->{}".format(schools)
+            default_params["origin"]="FACETED_SEARCH"
         else:
-            default_params["schools"] = ""
+            default_params["schools"]=""
 
-        res = self._fetch(
+        res=self._fetch(
             # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List(" + default_params['industry'] + default_params['network_depth'] +
+            f"/search/blended?count=10&filters=List(" + default_params["regions"] + default_params['industry'] + default_params['network_depth'] +
             default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
             default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
             default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
             default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
             default_params['start'],
-            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+            headers = {
+                "accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
 
-        data = res.json()
+        data=res.json()
 
         if not data.get("data").get("paging").get("total"):
             return {}
 
-        new_elements = []
+        new_elements=[]
         for i in range(len(data["data"]["elements"])):
             new_elements.extend(data["data"]["elements"][i]["elements"])
         # not entirely sure what extendedElements generally refers to - keyword search gives back a single job?
         # new_elements.extend(data["data"]["elements"][i]["extendedElements"])
 
         results.extend(new_elements)
-        results = results[
-            :limit
+        results=results[
+            : limit
         ]  # always trim results, no matter what the request returns
 
         # recursive base case
@@ -254,79 +268,80 @@ class Linkedin(object):
 
     def search_people(
         self,
-        keywords=None,
-        connection_of=None,
-        networkDepth=None,
-        currentCompany="",
-        past_companies=None,
-        nonprofit_interests=None,
-        profileLanguages=None,
-        regions=None,
-        industries=None,
-        schools="",
-        include_private_profiles=False,  # profiles without a public id, "Linkedin Member"
-        limit=None,
-        start=None,
-        key=None,
-        title="",
-        firstName="",
-        lastName=""
+        keywords = None,
+        connection_of = None,
+        networkDepth = None,
+        currentCompany = "",
+        past_companies = None,
+        nonprofit_interests = None,
+        profileLanguages = None,
+        regions = None,
+        industries = None,
+        schools = "",
+        # profiles without a public id, "Linkedin Member"
+        include_private_profiles = False,
+        limit = None,
+        start = None,
+        key = None,
+        title = "",
+        firstName = "",
+        lastName = ""
     ):
         """
         Do a people search.
         """
 
-        data = self.search_voyager(limit=limit, results=[], start=start,
-                                   key=keywords, industry=industries,  profileLanguages=profileLanguages,
-                                   networkDepth=networkDepth, title=title, firstName=firstName,
-                                   lastName=lastName, currentCompany=currentCompany, schools=schools)
+        data=self.search_voyager(limit = limit, results = [], start = start,
+                                   key = keywords, industry = industries,  profileLanguages = profileLanguages,
+                                   networkDepth = networkDepth, title = title, firstName = firstName,
+                                   lastName = lastName, currentCompany = currentCompany, schools = schools, regions = regions)
 
         if not data:
             return []
 
         try:
-            fullData = data.get("data").get("elements")
+            fullData=data.get("data").get("elements")
         except AttributeError:
             return []
 
-        data = data.get("included")
+        data=data.get("included")
 
-        results = []
+        results=[]
         for item in data:
             if "publicIdentifier" not in item:
                 continue
 
             if item.get("occupation"):
-                occupation = item.get("occupation")
-                size = len(occupation.split("\u2013"))
+                occupation=item.get("occupation")
+                size=len(occupation.split("\u2013"))
                 if size == 2:
-                    occupation = occupation.split("\u2013")
-                    position = occupation[0]
-                    company = occupation[1]
+                    occupation=occupation.split("\u2013")
+                    position=occupation[0]
+                    company=occupation[1]
                 else:
-                    size = len(occupation.split(" at "))
+                    size=len(occupation.split(" at "))
                     if size == 2:
-                        occupation = occupation.split(" at ")
-                        position = occupation[0]
-                        company = occupation[1]
+                        occupation=occupation.split(" at ")
+                        position=occupation[0]
+                        company=occupation[1]
                     else:
-                        size = len(occupation.split("|"))
+                        size=len(occupation.split("|"))
                         if size == 2:
-                            occupation = occupation.split("|")
-                            position = occupation[0]
-                            company = occupation[1]
+                            occupation=occupation.split("|")
+                            position=occupation[0]
+                            company=occupation[1]
                         else:
-                            size = len(occupation.split("-"))
+                            size=len(occupation.split("-"))
                             if size == 2:
-                                occupation = occupation.split("-")
-                                position = occupation[0]
-                                company = occupation[1]
+                                occupation=occupation.split("-")
+                                position=occupation[0]
+                                company=occupation[1]
                             else:
-                                position = occupation
-                                company = ""
+                                position=occupation
+                                company=""
 
             try:
-                displayPictureUrl = item.get("picture").get(
+                displayPictureUrl=item.get("picture").get(
                     "rootUrl") + item.get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
             except AttributeError:
                 displayPictureUrl = ""
