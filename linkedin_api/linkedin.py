@@ -154,7 +154,7 @@ class Linkedin(object):
         default_params = {
             "count": '10',
             "filters": "List()",
-            "origin": "CLUSTER_EXPANSION",
+            "origin": "FACETED_SEARCH",
             "q": "all",
             "start": str(start),
             "key": key,
@@ -221,7 +221,11 @@ class Linkedin(object):
             default_params['start'],
             headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
+
         data = res.json()
+
+        if not data.get("data").get("paging").get("total"):
+            return {}
 
         new_elements = []
         for i in range(len(data["data"]["elements"])):
@@ -277,9 +281,15 @@ class Linkedin(object):
                                    networkDepth=networkDepth, title=title, firstName=firstName,
                                    lastName=lastName, currentCompany=currentCompany, schools=schools)
 
-        fullData = data.get("data").get("elements")
+        if not data:
+            return []
 
-        data = data.get("included")[10:]
+        try:
+            fullData = data.get("data").get("elements")
+        except AttributeError:
+            return []
+
+        data = data.get("included")
 
         results = []
         for item in data:
