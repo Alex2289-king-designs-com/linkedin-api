@@ -141,7 +141,7 @@ class Linkedin(object):
 
         return self.search(params, results=results, limit=limit)
 
-    def search_voyager(self, limit=None, results=[], start=0, key=None, industry=None,  profileLanguages=None,
+    def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
                        networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools="", regions=None):
         """
         Default search
@@ -158,13 +158,32 @@ class Linkedin(object):
             "origin": "CLUSTER_EXPANSION",
             "q": "all",
             "start": str(start),
-            "key": key,
             "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
-            "industry": "industry->" + str(INDUSTRIES_ID.get(industry)) + ',',
-            "profileLanguages": "profileLanguage->" + str(PROFILE_LANGUAGES_ID.get(profileLanguages)) + ',',
-            "network_depth": "network->" + str(CONNECTIONS_DEPTH_ID.get(networkDepth)) + ',',
         }
 
+        if networkDepth is None:
+            default_params['network_depth'] = ""
+        else:
+            networkDepthCodes = []
+            for code in networkDepth:
+                code = CONNECTIONS_DEPTH_ID.get(code, "")
+                networkDepthCodes.append(code)
+
+            default_params["origin"] = "FACETED_SEARCH"
+            default_params["network_depth"] = "network->{},".format("|".join(networkDepthCodes))
+            print(default_params["network_depth"])
+
+
+        if profileLanguages is None:
+            default_params['profileLanguages'] = ""
+        else:
+            profileLanguagesCodes = []
+            for language in profileLanguages:
+                language = PROFILE_LANGUAGES_ID.get(language, "")
+                profileLanguagesCodes.append(language)
+            
+            default_params["origin"] = "FACETED_SEARCH"
+            default_params["profileLanguages"] = "profileLanguage->{},".format("|".join(profileLanguagesCodes))
 
         if regions is None:
             default_params["regions"] = ""
@@ -177,20 +196,24 @@ class Linkedin(object):
             default_params["origin"] = "FACETED_SEARCH"
             default_params["regions"] = "geoRegion->{}%3A0,".format("|".join(regions_codes))
 
-        if INDUSTRIES_ID.get(industry) is None:
-            default_params["industry"] = ""
+        if keys is None:
+            default_params["keys"] = ""
         else:
             default_params["origin"] = "FACETED_SEARCH"
+            keys = " ".join(keys)
+            default_params["keys"] = keys
 
-        if PROFILE_LANGUAGES_ID.get(profileLanguages) is None:
-            default_params['profileLanguages'] = ""
-        else:
-            default_params["origin"] = "FACETED_SEARCH"
 
-        if CONNECTIONS_DEPTH_ID.get(networkDepth) is None:
-            default_params['network_depth'] = ""
+        if industries is None:
+            default_params["industries"] = ""
         else:
+            industries_codes = [] 
+            for industry in industries:
+                industry = str(INDUSTRIES_ID.get(industry, ""))
+                industries_codes.append(industry)
+        
             default_params["origin"] = "FACETED_SEARCH"
+            default_params["industries"] = "industry->{},".format("|".join(industries_codes)) 
 
         if title:
             default_params['title'] = ",title->{}".format(title)
@@ -226,10 +249,10 @@ class Linkedin(object):
 
         res=self._fetch(
             # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List(" + default_params["regions"] + default_params['industry'] + default_params['network_depth'] +
+            f"/search/blended?count=10&filters=List(" + default_params["regions"] + default_params['industries'] + default_params['network_depth'] +
             default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
             default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
-            default_params["schools"] + ")&keywords=" + default_params['key'] + "%20&origin=" +
+            default_params["schools"] + ")&keywords=" + default_params['keys'] + "%20&origin=" +
             default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
             default_params['start'],
             headers = {
@@ -237,8 +260,11 @@ class Linkedin(object):
         )
 
         data=res.json()
-
-        if not data.get("data").get("paging").get("total"):
+        
+        try: 
+            if not data.get("data").get("paging").get("total"):
+                return {}
+        except AttributeError:
             return {}
 
         new_elements=[]
@@ -282,7 +308,7 @@ class Linkedin(object):
         include_private_profiles = False,
         limit = None,
         start = None,
-        key = None,
+        keys = None,
         title = "",
         firstName = "",
         lastName = ""
@@ -292,7 +318,7 @@ class Linkedin(object):
         """
 
         data=self.search_voyager(limit = limit, results = [], start = start,
-                                   key = keywords, industry = industries,  profileLanguages = profileLanguages,
+                                   keys = keywords, industries = industries,  profileLanguages = profileLanguages,
                                    networkDepth = networkDepth, title = title, firstName = firstName,
                                    lastName = lastName, currentCompany = currentCompany, schools = schools, regions = regions)
 
