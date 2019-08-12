@@ -164,56 +164,54 @@ class Linkedin(object):
         if networkDepth is None:
             default_params['network_depth'] = ""
         else:
-            networkDepthCodes = []
-            for code in networkDepth:
-                code = CONNECTIONS_DEPTH_ID.get(code, "")
-                networkDepthCodes.append(code)
+            # networkDepthCodes = []
+            # for code in networkDepth:
+            #     code = CONNECTIONS_DEPTH_ID.get(code, "")
+            #     networkDepthCodes.append(code)
 
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["network_depth"] = "network->{},".format("|".join(networkDepthCodes))
-            print(default_params["network_depth"])
+            default_params["network_depth"] = "network->{},".format("|".join(networkDepth))
 
 
         if profileLanguages is None:
             default_params['profileLanguages'] = ""
         else:
-            profileLanguagesCodes = []
-            for language in profileLanguages:
-                language = PROFILE_LANGUAGES_ID.get(language, "")
-                profileLanguagesCodes.append(language)
+            # profileLanguagesCodes = []
+            # for language in profileLanguages:
+            #     language = PROFILE_LANGUAGES_ID.get(language, "")
+            #     profileLanguagesCodes.append(language)
             
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["profileLanguages"] = "profileLanguage->{},".format("|".join(profileLanguagesCodes))
-
+            default_params["profileLanguages"] = "profileLanguage->{},".format("|".join(profileLanguages))
+            
         if regions is None:
             default_params["regions"] = ""
         else:
-            regions_codes = []
-            for region in regions:
-                region = GEOGRAPHY_CODES.get(region, "")
-                regions_codes.append(region)
+            # regions_codes = []
+            # for region in regions:
+            #     region = GEOGRAPHY_CODES.get(region, "")
+            #     regions_codes.append(region)
 
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["regions"] = "geoRegion->{},".format("|".join(regions_codes))
+            default_params["regions"] = "geoRegion->{},".format("|".join(regions))
 
         if keys is None:
             default_params["keys"] = ""
         else:
             default_params["origin"] = "FACETED_SEARCH"
-            keys = " ".join(keys)
             default_params["keys"] = keys
 
 
         if industries is None:
             default_params["industries"] = ""
         else:
-            industries_codes = [] 
-            for industry in industries:
-                industry = str(INDUSTRIES_ID.get(industry, ""))
-                industries_codes.append(industry)
+            # industries_codes = [] 
+            # for industry in industries:
+            #     industry = str(INDUSTRIES_ID.get(industry, ""))
+            #     industries_codes.append(industry)
         
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["industries"] = "industry->{},".format("|".join(industries_codes)) 
+            default_params["industries"] = "industry->{},".format("|".join(industries)) 
 
         if title:
             default_params['title'] = ",title->{}".format(title)
@@ -258,8 +256,9 @@ class Linkedin(object):
             headers = {
                 "accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
-
         data=res.json()
+            
+            
         
         try: 
             if not data.get("data").get("paging").get("total"):
@@ -859,7 +858,6 @@ class Linkedin(object):
         )
 
         data = res.json()
-        print(json.dumps(data, indent=4))
 
         return res.status_code != 200 
 
