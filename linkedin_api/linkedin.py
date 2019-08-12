@@ -850,15 +850,3 @@ class Linkedin(object):
 
         return res.status_code != 200
 
-
-    def get_code(self, name_of_region):
-        res = self._fetch(
-            f"/typeahead/hitsV2?keywords=Kharkiv&origin=OTHER&q=type&type=REGION",
-            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
-        )
-
-        data = res.json()
-
-        return res.status_code != 200 
-
-
