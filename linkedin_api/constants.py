@@ -165,5 +165,6 @@ CONNECTIONS_DEPTH_ID = {
 
 GEOGRAPHY_CODES = {
     "Russian": "ru",
-    "Ukraine": "ua"
+    "Ukraine": "ua",
+    "Kharkiv": "ua%3A10193"
 }

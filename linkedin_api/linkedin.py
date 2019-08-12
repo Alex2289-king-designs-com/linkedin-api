@@ -194,7 +194,7 @@ class Linkedin(object):
                 regions_codes.append(region)
 
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["regions"] = "geoRegion->{}%3A0,".format("|".join(regions_codes))
+            default_params["regions"] = "geoRegion->{},".format("|".join(regions_codes))
 
         if keys is None:
             default_params["keys"] = ""
@@ -846,7 +846,21 @@ class Linkedin(object):
     def remove_connection(self, public_profile_id):
         res = self._post(
             f"/identity/profiles/{public_profile_id}/profileActions?action=disconnect",
-            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+            
         )
 
         return res.status_code != 200
+
+
+    def get_code(self, name_of_region):
+        res = self._fetch(
+            f"/typeahead/hitsV2?keywords=Kharkiv&origin=OTHER&q=type&type=REGION",
+            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
+        )
+
+        data = res.json()
+        print(json.dumps(data, indent=4))
+
+        return res.status_code != 200 
+
+
