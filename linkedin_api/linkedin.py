@@ -136,7 +136,8 @@ class Linkedin(object):
         return self.search(params, results=results, limit=limit)
 
     def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
-                       networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools="", regions=None, past_companies=None):
+                       networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools="", regions=None, past_companies=None, 
+                       company=None):
         """
         Default search
         """
@@ -226,10 +227,16 @@ class Linkedin(object):
         else:
             default_params["schools"]=""
 
+        if company is None:
+            default_params["company"] = ""
+        else:
+            default_params["company"] = ",company->{}".format(company)
+            default_params["origin"]="FACETED_SEARCH"
+
         res=self._fetch(
             # f"/search/blended?{urlencode(default_params)}",
             f"/search/blended?count=10&filters=List("+ default_params["past_companies"] + default_params["regions"] + default_params['industries'] + default_params['network_depth'] +
-            default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
+            default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["company"]  + default_params["firstName"] +
             default_params["lastName"] + default_params["title"] + default_params["currentCompanies"] +
             default_params["schools"] + ")&keywords=" + default_params['keys'] + "%20&origin=" +
             default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
@@ -238,8 +245,6 @@ class Linkedin(object):
                 "accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
         data=res.json()
-            
-            
         
         try: 
             if not data.get("data").get("paging").get("total"):
@@ -291,7 +296,8 @@ class Linkedin(object):
         keys = None,
         title = "",
         firstName = "",
-        lastName = ""
+        lastName = "", 
+        company = None
     ):
         """
         Do a people search.
@@ -300,7 +306,8 @@ class Linkedin(object):
         data=self.search_voyager(limit = limit, results = [], start = start,
                                    keys = keywords, industries = industries,  profileLanguages = profileLanguages,
                                    networkDepth = networkDepth, title = title, firstName = firstName,
-                                   lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies)
+                                   lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies, 
+                                   company=company)
 
         if not data:
             return []
