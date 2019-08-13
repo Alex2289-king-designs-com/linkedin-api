@@ -136,7 +136,7 @@ class Linkedin(object):
         return self.search(params, results=results, limit=limit)
 
     def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
-                       networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools="", regions=None, past_companies=None, 
+                       networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools=None, regions=None, past_companies=None, 
                        company=None):
         """
         Default search
@@ -221,11 +221,12 @@ class Linkedin(object):
             default_params["origin"]="FACETED_SEARCH"
             
 
-        if schools:
-            default_params['schools']=",school->{}".format(schools)
-            default_params["origin"]="FACETED_SEARCH"
-        else:
+        if schools is None:
             default_params["schools"]=""
+        else:
+            default_params['schools']=",school->{}".format("|".join(schools))
+            default_params["origin"]="FACETED_SEARCH" 
+            
 
         if company is None:
             default_params["company"] = ""
@@ -288,7 +289,7 @@ class Linkedin(object):
         profileLanguages = None,
         regions = None,
         industries = None,
-        schools = "",
+        schools = None,
         # profiles without a public id, "Linkedin Member"
         include_private_profiles = False,
         limit = None,
