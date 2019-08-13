@@ -136,7 +136,7 @@ class Linkedin(object):
         return self.search(params, results=results, limit=limit)
 
     def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
-                       networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools="", regions=None):
+                       networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools="", regions=None, past_companies=None):
         """
         Default search
         """
@@ -155,39 +155,30 @@ class Linkedin(object):
             "queryContext": "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)",
         }
 
+        if past_companies is None:
+            default_params["past_companies"] = ""
+        else:
+            default_params["origin"] = "FACETED_SEARCH"
+            default_params["past_companies"] = "pastCompany->{},".format("|".join(past_companies))
+
         if networkDepth is None:
             default_params['network_depth'] = ""
         else:
-            # networkDepthCodes = []
-            # for code in networkDepth:
-            #     code = CONNECTIONS_DEPTH_ID.get(code, "")
-            #     networkDepthCodes.append(code)
-
             default_params["origin"] = "FACETED_SEARCH"
             default_params["network_depth"] = "network->{},".format("|".join(networkDepth))
 
 
         if profileLanguages is None:
             default_params['profileLanguages'] = ""
-        else:
-            # profileLanguagesCodes = []
-            # for language in profileLanguages:
-            #     language = PROFILE_LANGUAGES_ID.get(language, "")
-            #     profileLanguagesCodes.append(language)
-            
+        else:            
             default_params["origin"] = "FACETED_SEARCH"
             default_params["profileLanguages"] = "profileLanguage->{},".format("|".join(profileLanguages))
             
         if regions is None:
             default_params["regions"] = ""
         else:
-            # regions_codes = []
-            # for region in regions:
-            #     region = GEOGRAPHY_CODES.get(region, "")
-            #     regions_codes.append(region)
-
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["regions"] = "geoRegion->{},".format("|".join(regions))
+            default_params["regions"] = "geoRegion->{}%3A0,".format("|".join(regions))
 
         if keys is None:
             default_params["keys"] = ""
@@ -198,11 +189,7 @@ class Linkedin(object):
 
         if industries is None:
             default_params["industries"] = ""
-        else:
-            # industries_codes = [] 
-            # for industry in industries:
-            #     industry = str(INDUSTRIES_ID.get(industry, ""))
-            #     industries_codes.append(industry)
+        else: 
         
             default_params["origin"] = "FACETED_SEARCH"
             default_params["industries"] = "industry->{},".format("|".join(industries)) 
@@ -241,7 +228,7 @@ class Linkedin(object):
 
         res=self._fetch(
             # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List(" + default_params["regions"] + default_params['industries'] + default_params['network_depth'] +
+            f"/search/blended?count=10&filters=List("+ default_params["past_companies"] + default_params["regions"] + default_params['industries'] + default_params['network_depth'] +
             default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
             default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
             default_params["schools"] + ")&keywords=" + default_params['keys'] + "%20&origin=" +
@@ -313,7 +300,7 @@ class Linkedin(object):
         data=self.search_voyager(limit = limit, results = [], start = start,
                                    keys = keywords, industries = industries,  profileLanguages = profileLanguages,
                                    networkDepth = networkDepth, title = title, firstName = firstName,
-                                   lastName = lastName, currentCompany = currentCompany, schools = schools, regions = regions)
+                                   lastName = lastName, currentCompany = currentCompany, schools = schools, regions = regions, past_companies=past_companies)
 
         if not data:
             return []
