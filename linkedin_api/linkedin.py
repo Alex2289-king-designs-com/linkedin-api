@@ -137,7 +137,7 @@ class Linkedin(object):
 
     def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
                        networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools=None, regions=None, past_companies=None, 
-                       company=None):
+                       company=None, school=None):
         """
         Default search
         """
@@ -234,10 +234,17 @@ class Linkedin(object):
             default_params["company"] = ",company->{}".format(company)
             default_params["origin"]="FACETED_SEARCH"
 
+        if school is None:
+            default_params["school"] = ""
+        else:
+            default_params["school"] = ",school->{}".format(school)
+            default_params["origin"]="FACETED_SEARCH"
+
         res=self._fetch(
             # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List("+ default_params["past_companies"] + default_params["regions"] + default_params['industries'] + default_params['network_depth'] +
-            default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["company"]  + default_params["firstName"] +
+            f"/search/blended?count=10&filters=List("+ default_params["past_companies"] + default_params["regions"] + default_params['industries'] +
+             default_params['network_depth'] +
+            default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["school"] + default_params["company"]  + default_params["firstName"] +
             default_params["lastName"] + default_params["title"] + default_params["currentCompanies"] +
             default_params["schools"] + ")&keywords=" + default_params['keys'] + "%20&origin=" +
             default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
@@ -298,7 +305,8 @@ class Linkedin(object):
         title = "",
         firstName = "",
         lastName = "", 
-        company = None
+        company = None,
+        school=None 
     ):
         """
         Do a people search.
@@ -308,7 +316,7 @@ class Linkedin(object):
                                    keys = keywords, industries = industries,  profileLanguages = profileLanguages,
                                    networkDepth = networkDepth, title = title, firstName = firstName,
                                    lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies, 
-                                   company=company)
+                                   company=company, school=school)
 
         if not data:
             return []
