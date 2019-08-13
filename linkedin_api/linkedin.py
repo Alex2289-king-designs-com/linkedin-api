@@ -844,7 +844,7 @@ class Linkedin(object):
 
         return res.status_code != 200
 
-    def typehead(self, keywords, type):
+    def get_typehead(self, keywords, type):
 
         res = self._fetch(
             f'/typeahead/hitsV2?keywords=' + keywords + '&origin=OTHER&q=type&type=' + type,
