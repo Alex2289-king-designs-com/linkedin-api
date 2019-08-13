@@ -136,7 +136,7 @@ class Linkedin(object):
         return self.search(params, results=results, limit=limit)
 
     def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
-                       networkDepth=None, title="", firstName="", lastName="", currentCompany="", schools="", regions=None, past_companies=None):
+                       networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools="", regions=None, past_companies=None):
         """
         Default search
         """
@@ -213,12 +213,12 @@ class Linkedin(object):
         else:
             default_params["lastName"]=""
 
-        if currentCompany:
-            default_params['currentCompany']=",company->{}".format(
-                currentCompany)
-            default_params["origin"]="FACETED_SEARCH"
+        if currentCompanies is None:
+            default_params["currentCompanies"]=""
         else:
-            default_params["currentCompany"]=""
+            default_params['currentCompanies']=",currentCompany->{}".format("|".join(currentCompanies))
+            default_params["origin"]="FACETED_SEARCH"
+            
 
         if schools:
             default_params['schools']=",school->{}".format(schools)
@@ -230,7 +230,7 @@ class Linkedin(object):
             # f"/search/blended?{urlencode(default_params)}",
             f"/search/blended?count=10&filters=List("+ default_params["past_companies"] + default_params["regions"] + default_params['industries'] + default_params['network_depth'] +
             default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["firstName"] +
-            default_params["lastName"] + default_params["title"] + default_params["currentCompany"] +
+            default_params["lastName"] + default_params["title"] + default_params["currentCompanies"] +
             default_params["schools"] + ")&keywords=" + default_params['keys'] + "%20&origin=" +
             default_params["origin"] + "&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=" +
             default_params['start'],
@@ -277,7 +277,7 @@ class Linkedin(object):
         keywords = None,
         connection_of = None,
         networkDepth = None,
-        currentCompany = "",
+        currentCompanies = None,
         past_companies = None,
         nonprofit_interests = None,
         profileLanguages = None,
@@ -300,7 +300,7 @@ class Linkedin(object):
         data=self.search_voyager(limit = limit, results = [], start = start,
                                    keys = keywords, industries = industries,  profileLanguages = profileLanguages,
                                    networkDepth = networkDepth, title = title, firstName = firstName,
-                                   lastName = lastName, currentCompany = currentCompany, schools = schools, regions = regions, past_companies=past_companies)
+                                   lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies)
 
         if not data:
             return []
