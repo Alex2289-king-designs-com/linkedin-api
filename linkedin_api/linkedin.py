@@ -7,12 +7,6 @@ from time import sleep
 from urllib.parse import urlencode
 import json
 import re
-from .constants import (
-    INDUSTRIES_ID,
-    PROFILE_LANGUAGES_ID,
-    CONNECTIONS_DEPTH_ID,
-    GEOGRAPHY_CODES
-)
 
 from linkedin_api.utils.helpers import get_id_from_urn
 
@@ -849,4 +843,19 @@ class Linkedin(object):
         )
 
         return res.status_code != 200
+
+    def typehead(self, keywords, type):
+
+        res = self._fetch(
+            f'/typeahead/hitsV2?keywords=' + keywords + '&origin=OTHER&q=type&type=' + type,
+            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"
+        })
+
+        data = res.json()
+
+        elements = data.get("data").get("elements")
+
+        elements = json.dumps(elements)
+
+        return elements
 

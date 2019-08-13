@@ -1,3 +1,4 @@
+import ipdb
 from linkedin_api import Linkedin
 import json
 
@@ -6,12 +7,13 @@ password = "funforweb2016"
 
 api = Linkedin(email, password)
 
-result = api.search_people(
-    start=0,
-    limit=15,
-    keywords="python"
-)
 
-#result = api.get_profile('kirillstyopkin')
+# result = api.search_people(
+#   start = 0,
+#   limit = 15,
+#    keywords = "python"
+# )
+
+result = api.typehead('Kharkiv', 'REGION')
 
 print(json.dumps(result, indent=4))
