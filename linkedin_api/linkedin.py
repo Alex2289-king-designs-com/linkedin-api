@@ -179,7 +179,7 @@ class Linkedin(object):
             default_params["regions"] = ""
         else:
             default_params["origin"] = "FACETED_SEARCH"
-            default_params["regions"] = "geoRegion->{}%3A0,".format("|".join(regions))
+            default_params["regions"] = "geoRegion->{},".format("|".join(regions))
 
         if keys is None:
             default_params["keys"] = ""
