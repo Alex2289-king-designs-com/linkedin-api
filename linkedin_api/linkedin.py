@@ -137,7 +137,7 @@ class Linkedin(object):
 
     def search_voyager(self, limit=None, results=[], start=0, keys=None, industries=None,  profileLanguages=None,
                        networkDepth=None, title="", firstName="", lastName="", currentCompanies=None, schools=None, regions=None, past_companies=None, 
-                       company=None, school=None):
+                       company=None, school=None, connection_of=None):
         """
         Default search
         """
@@ -168,6 +168,11 @@ class Linkedin(object):
             default_params["origin"] = "FACETED_SEARCH"
             default_params["network_depth"] = "network->{},".format("|".join(networkDepth))
 
+        if connection_of is None: 
+            default_params['connection_of'] = ""
+        else:
+            default_params["origin"] = "FACETED_SEARCH"
+            default_params["connection_of"] = "connectionOf->{},".format("|".join(connection_of))
 
         if profileLanguages is None:
             default_params['profileLanguages'] = ""
@@ -242,7 +247,8 @@ class Linkedin(object):
 
         res=self._fetch(
             # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List("+ default_params["past_companies"] + default_params["regions"] + default_params['industries'] +
+            f"/search/blended?count=10&filters=List("+ default_params["connection_of"] 
+            + default_params["past_companies"] + default_params["regions"] + default_params['industries'] +
              default_params['network_depth'] +
             default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["school"] + default_params["company"]  + default_params["firstName"] +
             default_params["lastName"] + default_params["title"] + default_params["currentCompanies"] +
@@ -316,7 +322,7 @@ class Linkedin(object):
                                    keys = keywords, industries = industries,  profileLanguages = profileLanguages,
                                    networkDepth = networkDepth, title = title, firstName = firstName,
                                    lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies, 
-                                   company=company, school=school)
+                                   company=company, school=school, connection_of=connection_of)
 
         if not data:
             return []
