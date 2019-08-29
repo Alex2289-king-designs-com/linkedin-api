@@ -399,6 +399,22 @@ class Linkedin(object):
 
         return results
 
+
+    def get_current_profile_connections(self, start=None):
+    
+        res = self._fetch(
+            f'/search/blended?count=10&filters=List(network-%3EF,resultType-%3EPEOPLE)&origin=MEMBER_PROFILE_CANNED_SEARCH&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=' + str(start),
+            headers = {
+                "accept": "application/vnd.linkedin.normalized+json+2.1"},
+        )
+
+        data = res.json()
+
+        data = data.get("included")[10:]
+
+        return data
+
+
     def get_profile_contact_info(self, public_id=None, urn_id=None):
         """
         Return data for a single profile.
@@ -535,7 +551,7 @@ class Linkedin(object):
         """
         Return a list of profile ids connected to profile of given [urn_id]
         """
-        return self.search_people(connection_of=urn_id, network_depth="F")
+        return self.search_people(connection_of=urn_id, networkDepth="F")
 
     def get_company_updates(
         self, public_id=None, urn_id=None, max_results=None, results=[]
@@ -866,3 +882,4 @@ class Linkedin(object):
 
         return elements
 
+    
