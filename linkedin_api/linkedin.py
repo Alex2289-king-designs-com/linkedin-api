@@ -410,9 +410,24 @@ class Linkedin(object):
 
         data = res.json()
 
+        print(json.dumps(data, indent=4))
+
         data = data.get("included")[10:]
 
         return data
+
+    def get_quantity_of_current_profile_connections(self):
+        res = self._fetch(
+            f'/search/blended?count=10&filters=List(network-%3EF,resultType-%3EPEOPLE)&origin=MEMBER_PROFILE_CANNED_SEARCH&q=all&queryContext=List(spellCorrectionEnabled-%3Etrue,relatedSearchesEnabled-%3Etrue)&start=0',
+            headers = {
+                "accept": "application/vnd.linkedin.normalized+json+2.1"},
+        )
+
+        data = res.json()
+
+        count_of_connections = data.get("data").get("metadata").get("totalResultCount")
+
+        return count_of_connections
 
 
     def get_profile_contact_info(self, public_id=None, urn_id=None):
