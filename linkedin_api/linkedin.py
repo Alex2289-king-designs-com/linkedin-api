@@ -326,76 +326,51 @@ class Linkedin(object):
 
         if not data:
             return []
-
+        
         try:
-            fullData=data.get("data").get("elements")
-        except AttributeError:
+            users_data = data.get("data").get("elements")[0].get("elements")
+        except:
             return []
 
-        data=data.get("included")
+        try:
+            uncluded_data = [included for included in data.get("included") if "publicIdentifier" in included]
+        except:
+            return []
+        
+        users = []
 
+        for user_data in users_data:
+            for included in uncluded_data:
+                if user_data.get("targetUrn") == included.get("entityUrn"):
+                    users.append({
+                        "urn_id": user_data.get("targetUrn"),
+                        "data": user_data,
+                        "included": included
+                    })
+        
         results=[]
-        for item in data:
-            if "publicIdentifier" not in item:
-                continue
 
-            if item.get("occupation"):
-                occupation=item.get("occupation")
-                size=len(occupation.split("\u2013"))
-                if size == 2:
-                    occupation=occupation.split("\u2013")
-                    position=occupation[0]
-                    company=occupation[1]
-                else:
-                    size=len(occupation.split(" at "))
-                    if size == 2:
-                        occupation=occupation.split(" at ")
-                        position=occupation[0]
-                        company=occupation[1]
-                    else:
-                        size=len(occupation.split("|"))
-                        if size == 2:
-                            occupation=occupation.split("|")
-                            position=occupation[0]
-                            company=occupation[1]
-                        else:
-                            size=len(occupation.split("-"))
-                            if size == 2:
-                                occupation=occupation.split("-")
-                                position=occupation[0]
-                                company=occupation[1]
-                            else:
-                                position=occupation
-                                company=""
-
+        for user in users:
+            
             try:
-                displayPictureUrl=item.get("picture").get(
-                    "rootUrl") + item.get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
+                displayPictureUrl=user.get("included").get("picture").get("rootUrl") + user.get("included").get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
             except AttributeError:
                 displayPictureUrl = ""
 
             results.append(
                 {
-                    "urn_id": item.get("entityUrn").split(":")[3],
-                    "public_id": item.get("publicIdentifier"),
-                    "first_name": item.get("firstName"),
-                    "last_name": item.get("lastName"),
-                    "position": position,
-                    "company": company,
-                    "displayPictureUrl": displayPictureUrl
+                    "urn_id": user.get("urn_id").split(':')[-1],
+                    "public_id": user.get("data").get("publicIdentifier"),
+                    "first_name": user.get("included").get("firstName"),
+                    "last_name": user.get("included").get("lastName"),
+                    "headline": user.get("data").get("headline").get("text"),
+                    "snippet": user.get("data").get("snippetText").get("text"),
+                    "location": user.get("data").get("subline").get("text"),
+                    "network_depth": user.get("data").get("secondaryTitle").get("text"),
+                    "displayPictureUrl": displayPictureUrl,
+                    "navigation_url": user.get("data").get("navigationUrl")
                 }
             )
-
-            results = results[:10]
-            pos = 0
-            for element in fullData[0].get("elements"):
-                results[pos]['location'] = element.get("subline").get("text")
-                results[pos]['navigation_url'] = "https://www.linkedin.com/in/" + \
-                    results[pos].get("public_id")
-                pos += 1
-
-                if pos > (len(results) - 1):
-                    break
 
         return results
 
