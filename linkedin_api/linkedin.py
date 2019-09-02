@@ -11,6 +11,7 @@ import re
 from linkedin_api.utils.helpers import get_id_from_urn
 
 from linkedin_api.client import Client
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -326,7 +327,7 @@ class Linkedin(object):
 
         if not data:
             return []
-        
+        import ipdb; ipdb.set_trace()
         try:
             users_data = data.get("data").get("elements")[0].get("elements")
         except:
@@ -374,6 +375,45 @@ class Linkedin(object):
 
         return results
 
+
+    def get_quantity_of_search_pages(
+            self,
+            keywords = None,
+            connection_of = None,
+            networkDepth = None,
+            currentCompanies = None,
+            past_companies = None,
+            nonprofit_interests = None,
+            profileLanguages = None,
+            regions = None,
+            industries = None,
+            schools = None,
+            # profiles without a public id, "Linkedin Member"
+            include_private_profiles = False,
+            limit = None,
+            start = None,
+            keys = None,
+            title = "",
+            firstName = "",
+            lastName = "", 
+            company = None,
+            school=None 
+        ):
+        """
+        Do a people search.
+        """
+
+        data=self.search_voyager(limit = limit, results = [], start = start,
+                                   keys = keywords, industries = industries,  profileLanguages = profileLanguages,
+                                   networkDepth = networkDepth, title = title, firstName = firstName,
+                                   lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies, 
+                                   company=company, school=school, connection_of=connection_of)
+
+        try:
+            return math.ceil(data.get('data').get('metadata').get('totalResultCount') / 10)  
+        except:
+            return 0
+        
 
     def get_current_profile_connections(self, start=None):
     
