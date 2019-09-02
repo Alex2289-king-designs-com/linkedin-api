@@ -73,7 +73,7 @@ class Client(object):
                     "Cookie file not found. Requesting new cookies.")
 
         res = requests.get(
-            f"{Client.AUTH_BASE_URL}/checkpoint/lg/login-submit",
+            f"{Client.AUTH_BASE_URL}/sales/login",
             headers=Client.AUTH_REQUEST_HEADERS,
         )
 
@@ -105,7 +105,7 @@ class Client(object):
         }
 
         res = requests.post(
-            f"{Client.AUTH_BASE_URL}/sales/login",
+            f"{Client.AUTH_BASE_URL}/checkpoint/lg/login-submit",
             data=payload,
             cookies=self.session.cookies,
             headers=Client.AUTH_REQUEST_HEADERS,
