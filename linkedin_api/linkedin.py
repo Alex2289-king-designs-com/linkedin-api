@@ -16,6 +16,9 @@ import math
 
 logger = logging.getLogger(__name__)
 
+class UnconnectedException(Exception):
+    pass 
+
 
 def default_evade():
     """
