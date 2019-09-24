@@ -782,6 +782,10 @@ class Linkedin(object):
         conversation = self.get_conversation(conversation_id)
 
         messages = conversation.get("elements")
+
+        if messages is None:
+            raise UnconnectedException("You haven't connect with this profile {}".format(public_id))
+
         last_message = messages[len(messages) - 1]
 
         message_public_id = last_message.get('from').get('com.linkedin.voyager.messaging.MessagingMember').get('miniProfile').get('publicIdentifier')
