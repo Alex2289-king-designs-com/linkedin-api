@@ -770,6 +770,22 @@ class Linkedin(object):
                 return conversation.get('entityUrn').split(':')[-1]
         return None
 
+    def is_replied(self, public_id=None):
+        """
+            Return true if user replied you
+        """
+        conversation_id = self.get_conversation_id(public_id)
+
+        conversation = self.get_conversation(conversation_id)
+
+        messages = conversation.get("elements")
+        last_message = messages[len(messages) - 1]
+
+        message_public_id = last_message.get('from').get('com.linkedin.voyager.messaging.MessagingMember').get('miniProfile').get('publicIdentifier')
+
+        return message_public_id == public_id
+
+
     def send_message(self, conversation_urn_id=None, recipients=None, message_body=None):
         """
         Send a message to a given conversation. If error, return true.
