@@ -11,6 +11,7 @@ import re
 from linkedin_api.utils.helpers import get_id_from_urn
 
 from linkedin_api.client import Client
+
 import math
 
 logger = logging.getLogger(__name__)
@@ -147,9 +148,9 @@ class Linkedin(object):
             if limit and limit <= Linkedin._MAX_SEARCH_COUNT
             else Linkedin._MAX_SEARCH_COUNT
         )
-
+        
         default_params = {
-            "count": '10',
+            "count": str(limit),
             "filters": "List()",
             "origin": "CLUSTER_EXPANSION",
             "q": "all",
@@ -247,8 +248,7 @@ class Linkedin(object):
             default_params["origin"]="FACETED_SEARCH"
 
         res=self._fetch(
-            # f"/search/blended?{urlencode(default_params)}",
-            f"/search/blended?count=10&filters=List("+ default_params["connection_of"] 
+            f"/search/blended?count=" + str(limit) + "&filters=List("+ default_params["connection_of"] 
             + default_params["past_companies"] + default_params["regions"] + default_params['industries'] +
              default_params['network_depth'] +
             default_params['profileLanguages'] + "resultType-%3EPEOPLE" + default_params["school"] + default_params["company"]  + default_params["firstName"] +
@@ -259,15 +259,19 @@ class Linkedin(object):
             headers = {
                 "accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
+
         data=res.json()
         
         try: 
-            if not data.get("data").get("paging").get("total"):
-                return {}
+            if not data:
+                return []
         except AttributeError:
-            return {}
+            return []
+        
+        return data
 
         new_elements=[]
+        
         for i in range(len(data["data"]["elements"])):
             new_elements.extend(data["data"]["elements"][i]["elements"])
         # not entirely sure what extendedElements generally refers to - keyword search gives back a single job?
@@ -326,17 +330,14 @@ class Linkedin(object):
                                    company=company, school=school, connection_of=connection_of)
 
         if not data:
-            return []
-        import ipdb; ipdb.set_trace()
-        try:
-            users_data = data.get("data").get("elements")[0].get("elements")
-        except:
-            return []
+            return 0, []
 
         try:
+            number = data.get('data').get('metadata').get('totalResultCount')
+            users_data = data.get("data").get("elements")[0].get("elements")
             uncluded_data = [included for included in data.get("included") if "publicIdentifier" in included]
         except:
-            return []
+            return 0, []
         
         users = []
 
@@ -352,68 +353,62 @@ class Linkedin(object):
         results=[]
 
         for user in users:
-            
             try:
-                displayPictureUrl=user.get("included").get("picture").get("rootUrl") + user.get("included").get("picture").get("artifacts")[0].get("fileIdentifyingUrlPathSegment")
-            except AttributeError:
-                displayPictureUrl = ""
+                public_id = user.get("data", {}).get("publicIdentifier", "")
+            except TypeError:
+                public_id = ""
+            try:
+                first_name = user.get("included", {}).get("firstName", "")
+            except TypeError:
+                first_name = ""
+            try:
+                last_name = user.get("included", {}).get("lastName", "")
+            except TypeError:
+                last_name = ""
+            try:
+                headline = user.get("data",{}).get("headline", {}).get("text", "")
+            except TypeError:
+                headline = ""
+            try:
+                snippet = user.get("data", {}).get("snippetText", {}).get("text", "")
+            except TypeError:
+                snippet = ""
+            try:
+                location = user.get("data", {}).get("subline", {}).get("text", "")
+            except TypeError:
+                location = ""
+            try:
+                network_depth = user.get("data", {}).get("secondaryTitle", {}).get("text", "")
+            except TypeError:
+                network_depth = ""
+            try:
+                display_picture_url = user.get("included", {}).get("picture", {}).get("rootUrl", "") + user.get("included", {}).get("picture", {}).get("artifacts", [{}, ])[0].get("fileIdentifyingUrlPathSegment", {})
+                if display_picture_url is None:
+                    display_picture_url = ""
+            except:
+                display_picture_url = ""
+            try:  
+                navigation_url = user.get("data", {}).get("navigationUrl", "")
+            except TypeError:
+                navigation_url = ""
 
             results.append(
                 {
                     "urn_id": user.get("urn_id").split(':')[-1],
-                    "public_id": user.get("data").get("publicIdentifier"),
-                    "first_name": user.get("included").get("firstName"),
-                    "last_name": user.get("included").get("lastName"),
-                    "headline": user.get("data").get("headline").get("text"),
-                    "snippet": user.get("data").get("snippetText").get("text"),
-                    "location": user.get("data").get("subline").get("text"),
-                    "network_depth": user.get("data").get("secondaryTitle").get("text"),
-                    "displayPictureUrl": displayPictureUrl,
-                    "navigation_url": user.get("data").get("navigationUrl")
+                    "public_id": public_id,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "headline": headline,
+                    "snippet": snippet,
+                    "location": location,
+                    "network_depth": network_depth,
+                    "displayPictureUrl": display_picture_url,
+                    "navigation_url": navigation_url
                 }
             )
 
-        return results
+        return number, results
 
-
-    def get_quantity_of_search_pages(
-            self,
-            keywords = None,
-            connection_of = None,
-            networkDepth = None,
-            currentCompanies = None,
-            past_companies = None,
-            nonprofit_interests = None,
-            profileLanguages = None,
-            regions = None,
-            industries = None,
-            schools = None,
-            # profiles without a public id, "Linkedin Member"
-            include_private_profiles = False,
-            limit = None,
-            start = None,
-            keys = None,
-            title = "",
-            firstName = "",
-            lastName = "", 
-            company = None,
-            school=None 
-        ):
-        """
-        Do a people search.
-        """
-
-        data=self.search_voyager(limit = limit, results = [], start = start,
-                                   keys = keywords, industries = industries,  profileLanguages = profileLanguages,
-                                   networkDepth = networkDepth, title = title, firstName = firstName,
-                                   lastName = lastName, currentCompanies = currentCompanies, schools = schools, regions = regions, past_companies=past_companies, 
-                                   company=company, school=school, connection_of=connection_of)
-
-        try:
-            return math.ceil(data.get('data').get('metadata').get('totalResultCount') / 10)  
-        except:
-            return 0
-        
 
     def get_current_profile_connections(self, start=None):
     
@@ -425,7 +420,7 @@ class Linkedin(object):
 
         data = res.json()
 
-        print(json.dumps(data, indent=4))
+        print(json.dumps(data, indent=4), flush=True)
 
         data = data.get("included")[10:]
 
@@ -529,7 +524,7 @@ class Linkedin(object):
 
         if "miniProfile" in profile:
             if "picture" in profile["miniProfile"]:
-                profile["displayPictureUrl"] = profile["miniProfile"]["picture"][
+                profile["display_picture_url"] = profile["miniProfile"]["picture"][
                     "com.linkedin.common.VectorImage"
                 ]["rootUrl"] + avatarUrl
             profile["profile_id"] = get_id_from_urn(
@@ -581,7 +576,7 @@ class Linkedin(object):
         """
         Return a list of profile ids connected to profile of given [urn_id]
         """
-        return self.search_people(connection_of=urn_id, networkDepth="F")
+        return self.search_people(connection_of=urn_id, networkDepth="F")[1]
 
     def get_company_updates(
         self, public_id=None, urn_id=None, max_results=None, results=[]
@@ -760,7 +755,22 @@ class Linkedin(object):
 
         return res.json()
 
-    def send_message(self, conversation_urn_id=None, recipients=[], message_body=None):
+    def get_conversation_id(self, public_id=None):
+        """
+        Return the last conversation_urn_id with user at given [public_id]
+        """
+        params = {"keyVersion": "LEGACY_INBOX"}
+
+        res = self._fetch(f"/messaging/conversations", params=params)
+        
+        conversations = res.json().get('elements')
+        # import ipdb; ipdb.set_trace()
+        for conversation in conversations:
+            if len(conversation.get('participants', [])) == 1 and conversation.get('participants', [{}, ])[0].get('com.linkedin.voyager.messaging.MessagingMember', {}).get('miniProfile', {}).get('publicIdentifier', None) == public_id:
+                return conversation.get('entityUrn').split(':')[-1]
+        return None
+
+    def send_message(self, conversation_urn_id=None, recipients=None, message_body=None):
         """
         Send a message to a given conversation. If error, return true.
 
@@ -877,10 +887,10 @@ class Linkedin(object):
 
         return res.status_code == 200
 
-    def add_connection(self, profile_urn_id, message=None):
+    def add_connection(self, profile_urn_id=None, message=None):
         data = '{"trackingId":"yvzykVorToqcOuvtxjSFMg==","invitations":[],"excludeInvitations":[],"invitee":{"com.linkedin.voyager.growth.invitation.InviteeProfile":{"profileId":' + \
             '"' + profile_urn_id + '"' + '}}}'
-        if message:
+        if message is not None:
             data = '{"trackingId":"yvzykVorToqcOuvtxjSFMg==","invitations":[],"excludeInvitations":[],"invitee":{"com.linkedin.voyager.growth.invitation.InviteeProfile":{"profileId":' + \
                 '"' + profile_urn_id + '"' + '}},"message":' '"' + message + '"' + '}'
 
