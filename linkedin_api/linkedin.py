@@ -818,7 +818,7 @@ class Linkedin(object):
             }
         }
 
-        if conversation_urn_id and not recipients:
+        if conversation_urn_id:
             res = self._post(
                 f"/messaging/conversations/{conversation_urn_id}/events",
                 params=params,
