@@ -423,8 +423,6 @@ class Linkedin(object):
 
         data = res.json()
 
-        print(json.dumps(data, indent=4), flush=True)
-
         data = data.get("included")[10:]
 
         return data
@@ -767,7 +765,7 @@ class Linkedin(object):
         res = self._fetch(f"/messaging/conversations", params=params)
         
         conversations = res.json().get('elements')
-        # import ipdb; ipdb.set_trace()
+        
         for conversation in conversations:
             if len(conversation.get('participants', [])) == 1 and conversation.get('participants', [{}, ])[0].get('com.linkedin.voyager.messaging.MessagingMember', {}).get('miniProfile', {}).get('publicIdentifier', None) == public_id:
                 return conversation.get('entityUrn').split(':')[-1]
@@ -778,6 +776,9 @@ class Linkedin(object):
             Return true if user replied you
         """
         conversation_id = self.get_conversation_id(public_id)
+
+        if conversation_id is None:
+            return False
 
         conversation = self.get_conversation(conversation_id)
 
