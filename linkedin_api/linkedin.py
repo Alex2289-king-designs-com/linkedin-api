@@ -20,12 +20,12 @@ class UnconnectedException(Exception):
     pass 
 
 
-def default_evade():
+def default_evade(start: int = 2, end: int = 10) -> None:
     """
     A catch-all method to try and evade suspension from Linkedin.
     Currenly, just delays the request by a random (bounded) time
     """
-    sleep(random.uniform(0, 0))  # sleep a random duration to try and evade suspention
+    sleep(random.uniform(2, 10))  # sleep a random duration to try and evade suspention
 
 
 class Linkedin(object):
@@ -35,34 +35,35 @@ class Linkedin(object):
 
     _MAX_UPDATE_COUNT = 100  # max seems to be 100
     _MAX_SEARCH_COUNT = 49  # max seems to be 49
+    _MAX_SEARCH_RETURNED = 1000
     _MAX_REPEATED_REQUESTS = (
         200
     )  # VERY conservative max requests count to avoid rate-limit
 
     def __init__(self, username, password, refresh_cookies=False, debug=False):
         self.client = Client(refresh_cookies=refresh_cookies, debug=debug)
+        self.proxies = self.client.proxies
         self.client.authenticate(username, password)
         logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
-
         self.logger = logger
 
-    def _fetch(self, uri, evade=default_evade, **kwargs):
+    def _fetch(self, uri, **kwargs):
         """
         GET request to Linkedin API
         """
-        evade()
+        default_evade(start=0, end=0)
 
         url = f"{self.client.API_BASE_URL}{uri}"
-        return self.client.session.get(url, **kwargs)
+        return self.client.session.get(url,proxies=self.proxies, **kwargs)
 
-    def _post(self, uri, evade=default_evade, **kwargs):
+    def _post(self, uri, **kwargs):
         """
         POST request to Linkedin API
         """
-        evade()
+        default_evade(start=0, end=0)
 
         url = f"{self.client.API_BASE_URL}{uri}"
-        return self.client.session.post(url, **kwargs)
+        return self.client.session.post(url,proxies=self.proxies ,**kwargs)
 
     def get_current_profile(self):
         """
@@ -78,6 +79,7 @@ class Linkedin(object):
             'publicIdentifier': data['included'][0]['publicIdentifier'],
             'occupation': data['included'][0]['occupation'],
             'message_id': data['included'][0]['entityUrn'].split(':')[3],
+            'is_premium': data.get('data').get('premiumSubscriber'),
         }
 
         try:
@@ -337,6 +339,10 @@ class Linkedin(object):
 
         try:
             number = data.get('data').get('metadata').get('totalResultCount')
+
+            if number > Linkedin._MAX_SEARCH_RETURNED:
+                number = Linkedin._MAX_SEARCH_RETURNED 
+
             users_data = data.get("data").get("elements")[0].get("elements")
             uncluded_data = [included for included in data.get("included") if "publicIdentifier" in included]
         except:
@@ -764,7 +770,7 @@ class Linkedin(object):
 
         res = self._fetch(f"/messaging/conversations", params=params)
         
-        conversations = res.json().get('elements')
+        conversations = res.json().get('elements', [])
         
         for conversation in conversations:
             if len(conversation.get('participants', [])) == 1 and conversation.get('participants', [{}, ])[0].get('com.linkedin.voyager.messaging.MessagingMember', {}).get('miniProfile', {}).get('publicIdentifier', None) == public_id:
@@ -785,7 +791,7 @@ class Linkedin(object):
         messages = conversation.get("elements")
 
         if messages is None:
-            raise UnconnectedException("You haven't connect with this profile {}".format(public_id))
+            return False
 
         last_message = messages[len(messages) - 1]
 
@@ -853,9 +859,7 @@ class Linkedin(object):
         """"
         Return current user profile
         """
-        sleep(
-            random.randint(0, 1)
-        )  # sleep a random duration to try and evade suspention
+        default_evade(start=0, end=1)  # sleep a random duration to try and evade suspention
 
         res = self._fetch(f"/me")
 
@@ -923,6 +927,7 @@ class Linkedin(object):
             data=data,
             headers={"accept": "application/vnd.linkedin.normalized+json+2.1"},
         )
+
         return res.status_code
 
     def remove_connection(self, public_profile_id):
@@ -933,8 +938,40 @@ class Linkedin(object):
 
         return res.status_code != 200
 
-    def get_typehead(self, keywords=None, type=None):
+    def get_sent_invintations(self, start=0):
+        res = self._fetch(
+            f"/relationships/sentInvitationViewsV2?count=100&invitationType=CONNECTION&q=invitationType&start=" + str(start),
+            headers={"accept": "application/vnd.linkedin.normalized+json+2.1"}
+        )       
 
+        data = res.json()
+
+        return data 
+
+    def get_invitation_entity_urn(self, profile_urn=''):    
+        sent_invitations = self.get_sent_invintations().get('included', {})
+        for sent_invite in sent_invitations:
+            if sent_invite.get('toMemberId', '') == profile_urn:
+                return sent_invite.get('entityUrn', '')
+
+
+    def withdraw_invitation(self, entity_urn=''):
+
+        payload = {
+            "entityUrn": entity_urn,
+            "genericInvitation": False,
+            "genericInvitationType": "CONNECTION",
+            "inviteActionType": "ACTOR_WITHDRAW",
+        }
+
+        res = self._post(
+            f"/relationships/invitations?action=closeInvitations",
+            data=json.dumps(payload)
+        )
+        
+        return res.status_code == 200 
+
+    def get_typehead(self, keywords=None, type=None):
         res = self._fetch(
             f'/typeahead/hitsV2?keywords=' + keywords + '&origin=OTHER&q=type&type=' + type,
             headers={"accept": "application/vnd.linkedin.normalized+json+2.1"
@@ -945,5 +982,3 @@ class Linkedin(object):
         elements = data.get("data").get("elements")
 
         return elements
-
-    
